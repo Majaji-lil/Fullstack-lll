@@ -20,7 +20,7 @@ public class MascotaModel {
     private String especie;
     private String raza;
     private String color_caracteristica;
-    private String tamanno;
+    private String tamano;
     private String ubicacion;
 
 
