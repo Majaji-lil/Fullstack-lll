@@ -20,7 +20,7 @@ public class MascotaModel {
     private String especie;
     private String raza;
     private String color_caracteristica;
-    private String tamaño;
+    private String tamanio;
 
 
     public MascotaModel() {}
@@ -40,7 +40,7 @@ public class MascotaModel {
     public String getColor_caracteristica() {return color_caracteristica;}
     public void setColor_caracteristica(String color_caracteristica) {this.color_caracteristica = color_caracteristica;}
 
-    public String getTamaño() {return tamaño;}
-    public void setTamaño(String tamaño) {this.tamaño = tamaño;}
+    public String getTamanio() {return tamanio;}
+    public void setTamanio(String tamaño) {this.tamanio = tamanio;}
 
 }
