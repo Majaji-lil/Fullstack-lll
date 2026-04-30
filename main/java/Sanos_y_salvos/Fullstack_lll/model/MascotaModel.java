@@ -23,7 +23,7 @@ public class MascotaModel {
     private String tamano;
     private String ubicacion;
 
-
+ 
     public MascotaModel() {}
 
     public Long getId () { return id; }
@@ -41,7 +41,7 @@ public class MascotaModel {
     public String getColor_caracteristica() {return color_caracteristica;}
     public void setColor_caracteristica(String color_caracteristica) {this.color_caracteristica = color_caracteristica;}
 
-    public String getTamaño() {return tamaño;}
-    public void setTamaño(String tamaño) {this.tamaño = tamaño;}
+    public String getTamano() {return tamano;}
+    public void setTamano(String tamano) {this.tamano = tamano;}
 
 }
