@@ -21,6 +21,7 @@ public class MascotaModel {
     private String raza;
     private String color_caracteristica;
     private String tamaño;
+    private String sobrenombre;
 
 
     public MascotaModel() {}
