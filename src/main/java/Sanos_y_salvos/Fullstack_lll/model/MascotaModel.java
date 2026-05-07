@@ -20,16 +20,7 @@ public class MascotaModel {
     private String especie;
     private String raza;
     private String color_caracteristica;
-<<<<<<< HEAD
     private String tamano;
-=======
-    private String tamaño;
-<<<<<<< HEAD
-    private String sobrenombre;
->>>>>>> 91063072904abc28f63f0cf71bddb5ad511dfab8
-
-=======
->>>>>>> d10db17249a5d592090d7d7c2bc1ddbda66da069
 
     public MascotaModel() {}
 
