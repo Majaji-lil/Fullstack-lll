@@ -20,7 +20,11 @@ public class MascotaModel {
     private String especie;
     private String raza;
     private String color_caracteristica;
+<<<<<<< HEAD
     private String tamanio;
+=======
+    private String tamano;
+>>>>>>> 2d4fc8e03c4d9f49b74af8791825656b584bc3ac
 
 
     public MascotaModel() {}
@@ -40,7 +44,12 @@ public class MascotaModel {
     public String getColor_caracteristica() {return color_caracteristica;}
     public void setColor_caracteristica(String color_caracteristica) {this.color_caracteristica = color_caracteristica;}
 
+<<<<<<< HEAD
     public String getTamanio() {return tamanio;}
     public void setTamanio(String tamaño) {this.tamanio = tamanio;}
+=======
+    public String getTamano() {return tamano;}
+    public void setTamano(String tamano) {this.tamano = tamano;}
+>>>>>>> 2d4fc8e03c4d9f49b74af8791825656b584bc3ac
 
 }
