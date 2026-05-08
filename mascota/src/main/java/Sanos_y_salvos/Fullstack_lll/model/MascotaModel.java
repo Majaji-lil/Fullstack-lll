@@ -5,7 +5,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "Mascotas")
 public class MascotaModel {
@@ -20,26 +26,4 @@ public class MascotaModel {
     private String raza;
     private String color_caracteristica;
     private String tamano;
-
-
-    public MascotaModel() {}
-
-    public Long getId () { return id; }
-
-
-    public String getNombre() {return nombre;}
-    public void setNombre(String nombre) {this.nombre = nombre;}
-
-    public String getEspecie() {return especie;}
-    public void setEspecie(String especie) {this.especie = especie;}
-
-    public String getRaza() {return raza;}
-    public void setRaza(String raza) {this.raza = raza;}
-
-    public String getColor_caracteristica() {return color_caracteristica;}
-    public void setColor_caracteristica(String color_caracteristica) {this.color_caracteristica = color_caracteristica;}
-
-    public String getTamano() {return tamano;}
-    public void setTamano(String tamano) {this.tamano = tamano;}
-
 }
