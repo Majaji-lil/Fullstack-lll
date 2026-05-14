@@ -8,6 +8,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
 
 @Data
@@ -22,4 +23,6 @@ public class MascotaModel {
     private long id;
 
     private String descripcion;
+
+    private LocalDateTime fechaHora;
 }
