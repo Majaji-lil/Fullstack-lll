@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import Sanos_y_salvos.Fullstack_lll.model.MascotaModel;
 import Sanos_y_salvos.Fullstack_lll.service.MascotaService;
@@ -38,6 +39,12 @@ public class MascotaController {
     @GetMapping("/{id}")
     public MascotaModel obtener(@PathVariable Long id) {
         return service.encontrarporid(id);
+    }
+
+    @PutMapping("/{id}")
+    public MascotaModel actualizar(@PathVariable Long id, @RequestBody MascotaModel mascota) {
+        return service.actualizar(id, mascota);
+    
     }
     
     @DeleteMapping("/{id}")
