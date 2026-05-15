@@ -1,6 +1,6 @@
 package usuario.usuario.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,7 +27,8 @@ public class UserModel {
     @Column(unique = true, length = 50, nullable = false)
     private String correo;
 
-    @JsonIgnore
+    // Cambia esto en UserModel.java
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 

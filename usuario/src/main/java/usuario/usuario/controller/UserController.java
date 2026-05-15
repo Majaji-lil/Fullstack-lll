@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +41,21 @@ public class UserController {
     public UserModel crear(@RequestBody UserModel user) {
         return userService.guardar(user);
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<UserModel> actualizar(@PathVariable Integer id, @RequestBody UserModel userDetails) {
+        UserModel user = userService.encontrarPorId(id);
+        if (user != null) {
+
+            user.setCorreo(userDetails.getCorreo());
+            user.setNombres(userDetails.getNombres());
+           
+        
+        UserModel actualizado = userService.guardar(user);
+        return ResponseEntity.ok(actualizado);
+    } else {
+        return ResponseEntity.notFound().build();
+    }
+}
 
     
     @DeleteMapping("/{id}")
