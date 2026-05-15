@@ -28,6 +28,19 @@ public class MascotaService {
         return repository.findById(id).orElse(null);
     }
 
+    public MascotaModel actualizar (Long id, MascotaModel mascota) {
+        MascotaModel mascotaExistente = repository.findById(id).orElse(null);
+        if (mascotaExistente == null) return null;
+
+        mascotaExistente.setNombre(mascota.getNombre());
+        mascotaExistente.setEspecie(mascota.getEspecie());
+        mascotaExistente.setRaza(mascota.getRaza());
+        mascotaExistente.setColor_caracteristica(mascota.getColor_caracteristica());
+        mascotaExistente.setTamano(mascota.getTamano());
+
+        return repository.save(mascotaExistente);
+    }
+
     public void eliminar(Long id) {
         repository.deleteById(id);
     }
