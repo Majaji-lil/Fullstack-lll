@@ -1,4 +1,5 @@
 // src/api/urls.js
-export const API_USUARIOS = "http://localhost:8082/api/usuarios";
-export const API_PRODUCTOS = "http://localhost:8081/api/productos";
-export const API_PEDIDOS = "http://localhost:8083/api/pedidos";
+export const API_BASE = "http://localhost:8090";
+export const API_USUARIOS = `${API_BASE}/api/usuarios`;
+export const API_MASCOTAS = `${API_BASE}/api/mascotas`;
+export const API_REPORTES = `${API_BASE}/api/reportes`;
