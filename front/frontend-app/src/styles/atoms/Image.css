@@ -1,0 +1,28 @@
+/* src/styles/atoms/Image.css */
+.img-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+  flex-shrink: 0;
+}
+.img-avatar--sm  { width: 32px; height: 32px; font-size: 12px; }
+.img-avatar--md  { width: 42px; height: 42px; font-size: 14px; }
+.img-avatar--lg  { width: 56px; height: 56px; font-size: 18px; }
+.img-avatar--green  { background: #dcfce7; color: #15803d; }
+.img-avatar--blue   { background: #dbeafe; color: #1d4ed8; }
+.img-avatar--purple { background: #ede9fe; color: #7c3aed; }
+.img-avatar--orange { background: #ffedd5; color: #c2410c; }
+
+.img-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  width: 52px; height: 52px;
+  font-size: 26px;
+  background: #f0fdf4;
+  margin-bottom: 1rem;
+}

@@ -1,0 +1,60 @@
+/* src/organisms/Modal/Modal.css */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.modal-box__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-box__title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #111827;
+  font-family: system-ui;
+}
+
+.modal-box__close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #9ca3af;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.modal-box__body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-box__footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

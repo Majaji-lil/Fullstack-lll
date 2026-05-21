@@ -1,0 +1,21 @@
+/* src/styles/global.css */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: #f9fafb; }
+a { color: inherit; }
+
+/* spacing helpers */
+.mt-sm  { margin-top: 0.5rem; }
+.mt-md  { margin-top: 1rem; }
+.mt-lg  { margin-top: 1.75rem; }
+
+/* Home helpers */
+.hero-label { text-transform: uppercase; letter-spacing: 0.1em; color: #16a34a !important; font-weight: 600 !important; }
+.hero-sub   { max-width: 520px; margin-left: auto !important; margin-right: auto !important; }
+.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.section-title-group { text-align: center; display: flex; flex-direction: column; gap: 8px; margin-bottom: 2rem; }
+
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.feature-card  { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
+
+.tag-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 1.25rem; }
