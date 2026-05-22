@@ -29,7 +29,7 @@ public class ReporteModel {
     @Column(nullable = false)
     private String descripcion;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime fechaHora;
 
     @Column(nullable = false)
@@ -39,7 +39,7 @@ public class ReporteModel {
     private String mascotaNombre;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "ubicacion_id")
+    @JoinColumn(name = "ubicacion_id", nullable = true)
     private UbicacionModel ubicacion;
 
     public ReporteModel(String descripcion, LocalDateTime fechaHora, Long mascotaId, String mascotaNombre) {
