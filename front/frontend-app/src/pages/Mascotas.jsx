@@ -1,4 +1,3 @@
-// src/pages/Mascotas.jsx
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_MASCOTAS } from '../api/urls'
@@ -10,6 +9,41 @@ import Text from '../components/atoms/Text'
 import '../styles/organisms/Grid.css'
 
 const EMPTY = { nombre: '', especie: '', raza: '', color: '', descripcion: '', ubicacion: '' }
+
+const COMUNAS_SANTIAGO = [
+    "Cerrillos",
+    "Cerro Navia",
+    "Conchalí",
+    "El Bosque",
+    "Estación Central",
+    "Huechuraba",
+    "Independencia",
+    "La Cisterna",
+    "La Florida",
+    "La Granja",
+    "La Pintana",
+    "La Reina",
+    "Las Condes",
+    "Lo Barnechea",
+    "Lo Espejo",
+    "Lo Prado",
+    "Macul",
+    "Maipú",
+    "Ñuñoa",
+    "Pedro Aguirre Cerda",
+    "Peñalolén",
+    "Providencia",
+    "Pudahuel",
+    "Quilicura",
+    "Quinta Normal",
+    "Recoleta",
+    "Renca",
+    "San Joaquín",
+    "San Miguel",
+    "San Ramón",
+    "Santiago",
+    "Vitacura"
+];
 
 function Mascotas() {
     const [mascotas, setMascotas] = useState([])
