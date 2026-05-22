@@ -1,34 +1,28 @@
 package Sanos_y_salvos.Fullstack_lll.service;
 
-import java.util.List;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
-import Sanos_y_salvos.Fullstack_lll.model.MascotaModel;
-import Sanos_y_salvos.Fullstack_lll.repository.MascotaRepository;
+import Sanos_y_salvos.Fullstack_lll.model.MascotaDTO;
 
 @Service
 public class MascotaService {
 
-    private final MascotaRepository repository;
+    private final RestTemplate restTemplate;
+    private final String mascotaServiceUrl;
 
-    public MascotaService(MascotaRepository repository) {
-        this.repository = repository;
+    public MascotaService(@Value("${mascota.service.url}") String mascotaServiceUrl) {
+        this.mascotaServiceUrl = mascotaServiceUrl;
+        this.restTemplate = new RestTemplate();
     }
 
-    public List<MascotaModel> listar() {
-        return repository.findAll();
-    }
-
-    public MascotaModel guardar(MascotaModel mascota){
-        return repository.save(mascota);
-    }
-
-    public MascotaModel encontrarporid(Long id){
-        return repository.findById(id).orElse(null);
-    }
-
-    public void eliminar(Long id) {
-        repository.deleteById(id);
+    public MascotaDTO obtenerMascotaPorId(Long id) {
+        try {
+            return restTemplate.getForObject(mascotaServiceUrl + "/api/mascotas/" + id, MascotaDTO.class);
+        } catch (RestClientException ex) {
+            return null;
+        }
     }
 }
