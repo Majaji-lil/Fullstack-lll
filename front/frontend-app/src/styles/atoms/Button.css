@@ -1,0 +1,36 @@
+.btn--primary {
+  background: #d97706;
+  color: #fff;
+  border-color: #d97706;
+}
+
+.btn--primary:hover {
+  background: #b75e02;
+  border-color: #b75e02;
+}
+
+.btn--outline {
+  background: transparent;
+  color: #2d6a4f;
+  border-color: #2d6a4f;
+}
+
+.btn--lg {
+  padding: 14px 32px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+.btn--outline:hover {
+  background: #f4fbf7;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: #40514e;
+  border-color: #e9e3d5;
+}
+
+.btn--ghost:hover {
+  background: #f7f4eb;
+}

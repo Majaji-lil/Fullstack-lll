@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: sanosysalvos
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservicios-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mascotas-service:
+    build:
+      context: ./Mascota
+      dockerfile: Dockerfile
+    container_name: mascotas-service
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanosysalvos
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root1234
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - microservicios-net
+
+  usuarios-service:
+    build:
+      context: ./usuario
+      dockerfile: Dockerfile
+    container_name: usuarios-service
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root1234
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - microservicios-net
+
+  reporte-service:
+    build:
+      context: ./reporte
+      dockerfile: Dockerfile
+    container_name: reporte-service
+    restart: always
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanosysalvos
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root1234
+      MASCOTA_SERVICE_URL: http://mascotas-service:8081
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+     - microservicios-net
+
+  api-gateway:
+    build:
+      context: ./apiGateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: always
+    ports:
+      - "8090:8090"
+    environment:
+      MASCOTAS_URL: http://mascotas-service:8081
+      USUARIOS_URL: http://usuarios-service:8082
+      REPORTES_URL: http://reporte-service:8083
+    depends_on:
+      - mascotas-service
+      - usuarios-service
+      - reporte-service
+    networks:
+      - microservicios-net
+
+  frontend:
+    build:
+      context: ./front/frontend-app
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - microservicios-net
+
+networks:
+  microservicios-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
