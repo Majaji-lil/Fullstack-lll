@@ -58,23 +58,23 @@ services:
     networks:
       - microservicios-net
 
-  reporte-service:
-    build:
-      context: ./reporte
-      dockerfile: Dockerfile
-    container_name: reporte-service
-    restart: always
-    ports:
-      - "8083:8083"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanosysalvos
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root1234
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - microservicios-net
+  #reporte-service:
+   # build:
+    #  context: ./reporte
+     # dockerfile: Dockerfile
+    #container_name: reporte-service
+    #restart: always
+    #ports:
+     # - "8083:8083"
+    #environment:
+     # SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanosysalvos
+      #SPRING_DATASOURCE_USERNAME: root
+      #SPRING_DATASOURCE_PASSWORD: root1234
+    #depends_on:
+     # mysql:
+      #  condition: service_healthy
+    #networks:
+     # - microservicios-net
 
   api-gateway:
     build:
@@ -91,7 +91,7 @@ services:
     depends_on:
       - mascotas-service
       - usuarios-service
-      - reporte-service
+     # - reporte-service
     networks:
       - microservicios-net
 
