@@ -1,13 +1,13 @@
-package Sanos_y_salvos.Fullstack_lll;
+package Reporte.reporte;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FullstackLllApplication {
+public class ReporteApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(FullstackLllApplication.class, args);
+		SpringApplication.run(ReporteApplication.class, args);
 	}
 
 }
