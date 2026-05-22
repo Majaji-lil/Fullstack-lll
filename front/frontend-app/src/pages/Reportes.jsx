@@ -1,112 +1,208 @@
 // src/pages/Reportes.jsx
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { API_REPORTES } from '../api/urls'
+import { API_REPORTES, API_MASCOTAS } from '../api/urls'
 import InfoCard from '../components/molecules/InfoCard'
 import Modal from '../organisms/Modal'
 import Input from '../components/atoms/Input'
 import Button from '../components/atoms/Button'
 import '../styles/organisms/Grid.css'
 
-const EMPTY = { titulo: '', descripcion: '', ubicacion: '', tipo: 'PERDIDA', fecha: '' }
-const TIPOS = { PERDIDA: { label: 'Perdida', color: 'red' }, ENCONTRADA: { label: 'Encontrada', color: 'green' } }
+const EMPTY_FORM = {
+    descripcion: '',
+    fechaHora: '',
+    mascotaId: '',
+    ubicacionId: '',
+}
+
+const formatFecha = (fechaHora) => {
+    if (!fechaHora) return null
+    try {
+        return new Date(fechaHora).toLocaleString('es-CL', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+        })
+    } catch { return fechaHora }
+}
+
+const buildMeta = (r) => {
+    const partes = []
+    if (r.mascotaNombre) partes.push(`🐾 ${r.mascotaNombre}`)
+    if (r.fechaHora) partes.push(`📅 ${formatFecha(r.fechaHora)}`)
+    if (r.ubicacion) {
+        const u = r.ubicacion
+        const dir = [u.direccion, u.ciudad, u.departamento, u.pais].filter(Boolean).join(', ')
+        if (dir) partes.push(`📍 ${dir}`)
+    }
+    return partes.join('  ·  ')
+}
 
 function Reportes() {
     const [reportes, setReportes] = useState([])
+    const [mascotas, setMascotas] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [modal, setModal] = useState(false)
-    const [editando, setEditando] = useState(null)
-    const [form, setForm] = useState(EMPTY)
-    const [filtro, setFiltro] = useState('TODOS')
+    const [form, setForm] = useState(EMPTY_FORM)
+    const [formError, setFormError] = useState('')
 
     const cargar = () => {
         setLoading(true)
-        axios.get(API_REPORTES)
-            .then(r => { setReportes(r.data); setError(null) })
-            .catch(() => setError('No se pudo conectar al servicio de reportes'))
+        Promise.all([
+            axios.get(API_REPORTES),
+            axios.get(API_MASCOTAS),
+        ])
+            .then(([rReportes, rMascotas]) => {
+                setReportes(rReportes.data)
+                setMascotas(rMascotas.data)
+                setError(null)
+            })
+            .catch(() => setError('No se pudo conectar al servicio de reportes o mascotas'))
             .finally(() => setLoading(false))
     }
+
     useEffect(() => { cargar() }, [])
 
-    const field = (key) => ({ value: form[key], onChange: e => setForm({ ...form, [key]: e.target.value }) })
+    const field = (key) => ({
+        value: form[key],
+        onChange: e => setForm({ ...form, [key]: e.target.value }),
+    })
 
-    const openCreate = () => { setForm(EMPTY); setEditando(null); setModal(true) }
-    const openEdit = (r) => { setForm({ titulo: r.titulo || '', descripcion: r.descripcion || '', ubicacion: r.ubicacion || '', tipo: r.tipo || 'PERDIDA', fecha: r.fecha || '' }); setEditando(r); setModal(true) }
-    const closeModal = () => setModal(false)
+    const openCreate = () => { setForm(EMPTY_FORM); setFormError(''); setModal(true) }
+    const closeModal = () => { setModal(false); setFormError('') }
 
     const guardar = () => {
-        if (!form.titulo) { alert('El título es obligatorio'); return }
-        const req = editando ? axios.put(`${API_REPORTES}/${editando.id}`, form) : axios.post(API_REPORTES, form)
-        req.then(() => { closeModal(); cargar() }).catch(() => alert('Error al guardar'))
-    }
-    const eliminar = (id) => {
-        if (!confirm('¿Eliminar este reporte?')) return
-        axios.delete(`${API_REPORTES}/${id}`).then(cargar)
-    }
+        if (!form.descripcion) { setFormError('La descripción es obligatoria'); return }
+        if (!form.mascotaId) { setFormError('Debes seleccionar una mascota'); return }
 
-    const filtrados = filtro === 'TODOS' ? reportes : reportes.filter(r => r.tipo === filtro)
+        // Validación y formateo estricto para LocalDateTime de Java (YYYY-MM-DDTHH:mm:ss)
+        let fechaFormateada = null;
+        if (form.fechaHora) {
+            // Asegura que tenga segundos ":00" si el input nativo no los pone
+            fechaFormateada = form.fechaHora.length === 16 ? `${form.fechaHora}:00` : form.fechaHora;
+        }
+
+        const payload = {
+            descripcion: form.descripcion,
+            fechaHora: fechaFormateada, // Enviamos el formato ISO correcto o null
+            mascotaId: Number(form.mascotaId),
+            ubicacionId: form.ubicacionId ? Number(form.ubicacionId) : null,
+        }
+
+        axios.post(API_REPORTES, payload)
+            .then(() => { closeModal(); cargar() })
+            .catch(err => {
+                const msg = err.response?.status === 400
+                    ? 'No se encontró la mascota con ese ID o el formato de datos es incorrecto.'
+                    : 'Error al crear el reporte'
+                setFormError(msg)
+            })
+    }
 
     return (
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '2rem 1.5rem' }}>
+
             <div className="page-header">
                 <div className="page-header__text">
                     <h1>Reportes</h1>
-                    <p>{reportes.length} reporte{reportes.length !== 1 ? 's' : ''} publicado{reportes.length !== 1 ? 's' : ''}</p>
+                    <p>{reportes.length} reporte{reportes.length !== 1 ? 's' : ''} registrado{reportes.length !== 1 ? 's' : ''}</p>
                 </div>
                 <Button variant="primary" onClick={openCreate}>+ Nuevo reporte</Button>
-            </div>
-
-            <div className="filter-bar">
-                {['TODOS', 'PERDIDA', 'ENCONTRADA'].map(t => (
-                    <button key={t} className={`filter-chip ${filtro === t ? 'filter-chip--active' : ''}`} onClick={() => setFiltro(t)}>
-                        {t === 'TODOS' ? 'Todos' : TIPOS[t].label}
-                    </button>
-                ))}
             </div>
 
             {loading && <p style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontFamily: 'system-ui' }}>Cargando...</p>}
             {error && <div className="alert-error">⚠️ {error}</div>}
 
-            {!loading && !error && filtrados.length === 0 && (
-                <div className="empty-state"><div className="empty-state__icon">📋</div><p>No hay reportes en esta categoría.</p></div>
+            {!loading && !error && reportes.length === 0 && (
+                <div className="empty-state">
+                    <div className="empty-state__icon">📋</div>
+                    <p>No hay reportes registrados aún.</p>
+                </div>
             )}
 
             <div className="card-grid">
-                {filtrados.map(r => (
+                {reportes.map(r => (
                     <InfoCard
                         key={r.id}
-                        title={r.titulo || 'Sin título'}
-                        badge={TIPOS[r.tipo]?.label || r.tipo}
-                        badgeColor={TIPOS[r.tipo]?.color || 'gray'}
-                        description={r.descripcion}
-                        meta={[r.ubicacion && `📍 ${r.ubicacion}`, r.fecha && `📅 ${r.fecha}`].filter(Boolean).join('  ')}
-                        onEdit={() => openEdit(r)}
-                        onDelete={() => eliminar(r.id)}
+                        title={r.descripcion}
+                        badge={r.mascotaNombre}
+                        badgeColor="green"
+                        meta={buildMeta(r)}
                     />
                 ))}
             </div>
 
             {modal && (
-                <Modal title={editando ? 'Editar reporte' : 'Nuevo reporte'} onClose={closeModal} onSave={guardar} saveLabel="Publicar">
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        {Object.entries(TIPOS).map(([key, val]) => (
-                            <button key={key} onClick={() => setForm({ ...form, tipo: key })}
+                <Modal
+                    title="Nuevo reporte"
+                    onClose={closeModal}
+                    onSave={guardar}
+                    saveLabel="Publicar reporte"
+                >
+                    <Input
+                        label="Descripción *"
+                        placeholder="¿Qué pasó? Describe la situación..."
+                        textarea
+                        {...field('descripcion')}
+                    />
+
+                    {mascotas.length > 0 ? (
+                        <div>
+                            <label style={{ fontSize: 13, color: '#6b7280', fontFamily: 'system-ui', display: 'block', marginBottom: 4 }}>
+                                Mascota *
+                            </label>
+                            <select
+                                value={form.mascotaId}
+                                onChange={e => setForm({ ...form, mascotaId: e.target.value })}
                                 style={{
-                                    flex: 1, padding: '8px', borderRadius: 6, cursor: 'pointer', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600,
-                                    border: form.tipo === key ? `2px solid` : '1px solid #e5e7eb',
-                                    borderColor: form.tipo === key ? (key === 'PERDIDA' ? '#dc2626' : '#16a34a') : '#e5e7eb',
-                                    background: form.tipo === key ? (key === 'PERDIDA' ? '#fef2f2' : '#f0fdf4') : '#fff',
-                                    color: form.tipo === key ? (key === 'PERDIDA' ? '#dc2626' : '#16a34a') : '#6b7280'
-                                }}>
-                                {val.label}
-                            </button>
-                        ))}
-                    </div>
-                    <Input label="Título" placeholder="Ej: Perdí a mi perro en Ñuñoa" {...field('titulo')} />
-                    <Input label="Ubicación" placeholder="Ej: Plaza Ñuñoa, Santiago"     {...field('ubicacion')} />
-                    <Input label="Fecha" type="date"                                  {...field('fecha')} />
-                    <Input label="Descripción" placeholder="Describe la situación..." textarea {...field('descripcion')} />
+                                    width: '100%', padding: '9px 12px', borderRadius: 7,
+                                    border: '1px solid #d1d5db', fontFamily: 'system-ui',
+                                    fontSize: 14, color: '#111827', background: '#fff',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                <option value="">Selecciona una mascota...</option>
+                                {mascotas.map(m => (
+                                    <option key={m.id} value={m.id}>
+                                        {m.nombre} {m.especie ? `(${m.especie})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <Input
+                            label="ID de mascota *"
+                            placeholder="Ingresa el ID numérico de la mascota"
+                            type="number"
+                            {...field('mascotaId')}
+                        />
+                    )}
+
+                    <Input
+                        label="Fecha y hora"
+                        type="datetime-local"
+                        {...field('fechaHora')}
+                    />
+
+                    <Input
+                        label="ID de ubicación (opcional)"
+                        placeholder="Si ya existe una ubicación registrada"
+                        type="number"
+                        {...field('ubicacionId')}
+                    />
+
+                    {formError && (
+                        <div style={{
+                            background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
+                            borderRadius: 7, padding: '8px 12px', fontSize: 13, fontFamily: 'system-ui',
+                        }}>
+                            ⚠️ {formError}
+                        </div>
+                    )}
+
+                    <p style={{ fontSize: 12, color: '#9ca3af', fontFamily: 'system-ui', margin: 0, lineHeight: 1.5 }}>
+                        Para asignar una ubicación nueva usa <code>PUT /api/reportes/{'{id}'}/ubicacion</code> después de crear el reporte.
+                    </p>
                 </Modal>
             )}
         </div>
