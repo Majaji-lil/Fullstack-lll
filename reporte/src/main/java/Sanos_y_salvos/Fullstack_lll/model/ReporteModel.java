@@ -11,6 +11,8 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "reportes")
 public class ReporteModel {
 
@@ -38,53 +40,5 @@ public class ReporteModel {
         this.fechaHora = fechaHora;
         this.mascotaId = mascotaId;
         this.mascotaNombre = mascotaNombre;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public LocalDateTime getFechaHora() {
-        return fechaHora;
-    }
-
-    public void setFechaHora(LocalDateTime fechaHora) {
-        this.fechaHora = fechaHora;
-    }
-
-    public Long getMascotaId() {
-        return mascotaId;
-    }
-
-    public void setMascotaId(Long mascotaId) {
-        this.mascotaId = mascotaId;
-    }
-
-    public String getMascotaNombre() {
-        return mascotaNombre;
-    }
-
-    public void setMascotaNombre(String mascotaNombre) {
-        this.mascotaNombre = mascotaNombre;
-    }
-
-    public UbicacionModel getUbicacion() {
-        return ubicacion;
-    }
-
-    public void setUbicacion(UbicacionModel ubicacion) {
-        this.ubicacion = ubicacion;
     }
 }

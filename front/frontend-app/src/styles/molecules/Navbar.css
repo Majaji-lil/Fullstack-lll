@@ -1,0 +1,70 @@
+/* src/styles/molecules/Navbar.css */
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2rem;
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+.navbar__logo {
+  background: #1b4332;
+  color: #fff;
+}
+
+.navbar__title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #111827;
+  font-family: Georgia, serif;
+}
+
+.navbar__link {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: system-ui, sans-serif;
+  transition: all 0.15s;
+}
+
+.navbar__link:hover {
+  color: #111827;
+  background: #f3f4f6;
+}
+
+.navbar__link--active {
+  color: #16a34a;
+  background: #f0fdf4;
+  font-weight: 600;
+}
+
+.navbar__spacer {
+  flex: 1;
+}
+
+.navbar__admin-badge {
+  font-size: 12px;
+  background: #fef9c3;
+  color: #854d0e;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-weight: 600;
+  font-family: system-ui;
+  margin-right: 4px;
+}
