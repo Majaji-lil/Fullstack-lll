@@ -1,16 +1,64 @@
 /* src/styles/atoms/Text.css */
-.text-h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; color: #111827; font-family: Georgia, serif; line-height: 1.2; margin: 0; }
-.text-h2 { font-size: 1.75rem; font-weight: 700; color: #111827; font-family: Georgia, serif; margin: 0; }
-.text-h3 { font-size: 1.1rem; font-weight: 700; color: #111827; font-family: system-ui, sans-serif; margin: 0; }
-.text-body { font-size: 15px; color: #4b5563; font-family: system-ui, sans-serif; line-height: 1.7; margin: 0; }
-.text-small { font-size: 13px; color: #6b7280; font-family: system-ui, sans-serif; margin: 0; }
+/* Cambiar en src/styles/atoms/Text.css */
+.text-h1 {
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.03em;
+  /* Hace que las letras se junten un pelín, se ve muy Pro */
+}
+
+.text-h2 {
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.text-h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  font-family: system-ui, sans-serif;
+  margin: 0;
+}
+
+.text-body {
+  font-size: 15px;
+  color: #4b5563;
+  font-family: system-ui, sans-serif;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.text-small {
+  font-size: 13px;
+  color: #6b7280;
+  font-family: system-ui, sans-serif;
+  margin: 0;
+}
+
 .text-badge {
   display: inline-block;
-  font-size: 12px; font-weight: 600;
-  padding: 3px 10px; border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
   font-family: system-ui, sans-serif;
 }
-.text-badge--green  { background: #f0fdf4; color: #16a34a; }
-.text-badge--red    { background: #fef2f2; color: #dc2626; }
-.text-badge--blue   { background: #eff6ff; color: #2563eb; }
-.text-badge--gray   { background: #f3f4f6; color: #6b7280; }
+
+.text-badge--green {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.text-badge--red {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.text-badge--blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.text-badge--gray {
+  background: #f3f4f6;
+  color: #6b7280;
+}

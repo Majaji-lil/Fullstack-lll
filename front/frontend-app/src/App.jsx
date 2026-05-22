@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/molecules/Navbar'
+import Footer from './organisms/Footer'
 import Home from './pages/Home'
 import Mascotas from './pages/Mascotas'
 import Usuarios from './pages/Usuarios'
@@ -17,25 +18,32 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
 
-        <main style={{ minHeight: 'calc(100vh - 56px)' }}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/mascotas" element={<Mascotas />} />
-            <Route path="/reportes" element={<Reportes />} />
-            <Route path="/login" element={<Login />} />
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-            <Route path="/usuarios" element={
-              <RutaProtegida>
-                <Usuarios />
-              </RutaProtegida>
-            } />
+          <Navbar />
+
+          <main style={{ flex: 1 }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/mascotas" element={<Mascotas />} />
+              <Route path="/reportes" element={<Reportes />} />
+              <Route path="/login" element={<Login />} />
+
+              <Route path="/usuarios" element={
+                <RutaProtegida>
+                  <Usuarios />
+                </RutaProtegida>
+              } />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
 
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+          <Footer />
+
+        </div>
       </BrowserRouter>
     </AuthProvider>
   )

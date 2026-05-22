@@ -11,6 +11,7 @@
   top: 0;
   z-index: 100;
 }
+
 .navbar__brand {
   display: flex;
   align-items: center;
@@ -18,19 +19,19 @@
   text-decoration: none;
   margin-right: 1rem;
 }
+
 .navbar__logo {
-  width: 33px; height: 33px;
-  border-radius: 8px;
-  background: #16a34a;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
+  background: #1b4332;
+  color: #fff;
 }
+
 .navbar__title {
   font-weight: 700;
   font-size: 15px;
   color: #111827;
   font-family: Georgia, serif;
 }
+
 .navbar__link {
   text-decoration: none;
   font-size: 14px;
@@ -41,9 +42,22 @@
   font-family: system-ui, sans-serif;
   transition: all 0.15s;
 }
-.navbar__link:hover       { color: #111827; background: #f3f4f6; }
-.navbar__link--active     { color: #16a34a; background: #f0fdf4; font-weight: 600; }
-.navbar__spacer           { flex: 1; }
+
+.navbar__link:hover {
+  color: #111827;
+  background: #f3f4f6;
+}
+
+.navbar__link--active {
+  color: #16a34a;
+  background: #f0fdf4;
+  font-weight: 600;
+}
+
+.navbar__spacer {
+  flex: 1;
+}
+
 .navbar__admin-badge {
   font-size: 12px;
   background: #fef9c3;

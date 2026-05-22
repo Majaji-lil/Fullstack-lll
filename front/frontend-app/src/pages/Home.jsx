@@ -16,7 +16,6 @@ const TAGS = ['Spring Boot', 'React + Vite', 'API Gateway', 'MySQL']
 function Home() {
     return (
         <div>
-            {/* Hero */}
             <Section variant="hero">
                 <Text variant="small" className="hero-label">Plataforma colaborativa de mascotas</Text>
                 <Text variant="h1" className="mt-sm">Porque cada mascota<br />merece volver a casa</Text>
@@ -30,7 +29,6 @@ function Home() {
                 </div>
             </Section>
 
-            {/* Features */}
             <Section>
                 <div className="section-title-group">
                     <Text variant="h2">¿Cómo funciona?</Text>
@@ -47,18 +45,7 @@ function Home() {
                 </div>
             </Section>
 
-            {/* About */}
-            <Section variant="gray" size="sm">
-                <Text variant="h2">Sobre el proyecto</Text>
-                <Text variant="body" className="mt-sm">
-                    Sanos y Salvos es un proyecto universitario desarrollado en DuocUC como parte del
-                    curso FullStack Development III. Utiliza una arquitectura de microservicios con
-                    Spring Boot, Node.js y React, conectados a través de una API Gateway.
-                </Text>
-                <div className="tag-row mt-md">
-                    {TAGS.map(t => <Text key={t} badge="green">{t}</Text>)}
-                </div>
-            </Section>
+
         </div>
     )
 }
