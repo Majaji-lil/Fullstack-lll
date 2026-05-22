@@ -1,9 +1,10 @@
-/* src/styles/atoms/Text.css */
-/* Cambiar en src/styles/atoms/Text.css */
 .text-h1 {
-  font-family: system-ui, -apple-system, sans-serif;
-  letter-spacing: -0.03em;
-  /* Hace que las letras se junten un pelín, se ve muy Pro */
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  color: #1b4332;
+  font-family: system-ui, sans-serif;
+  line-height: 1.2;
+  margin: 0;
 }
 
 .text-h2 {
