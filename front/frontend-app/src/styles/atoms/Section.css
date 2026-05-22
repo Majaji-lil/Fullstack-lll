@@ -1,0 +1,30 @@
+.section {
+    padding: 3rem 1.5rem;
+}
+
+.section--hero {
+    background: linear-gradient(135deg, #f2f9f5, #fbf7ee);
+    border-bottom: 1px solid #e9e3d5;
+    text-align: center;
+    padding: 5rem 2rem;
+}
+
+.section--gray {
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+.section--white {
+    background: #fff;
+}
+
+.section__inner {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.section__inner--sm {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+}

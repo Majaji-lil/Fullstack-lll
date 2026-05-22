@@ -1,0 +1,86 @@
+/* src/styles/organisms/Grid.css */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.page-header__text h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  font-family: Georgia, serif;
+  margin: 0 0 4px;
+}
+.page-header__text p {
+  font-size: 13px;
+  color: #9ca3af;
+  font-family: system-ui;
+  margin: 0;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.list-table {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.list-table__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.1s;
+}
+.list-table__row:last-child { border-bottom: none; }
+.list-table__row:hover      { background: #f9fafb; }
+.list-table__info           { flex: 1; min-width: 0; }
+.list-table__name           { font-weight: 600; font-size: 14px; color: #111827; margin: 0; font-family: system-ui; }
+.list-table__sub            { font-size: 13px; color: #9ca3af; margin: 0; font-family: system-ui; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-table__actions        { display: flex; gap: 6px; }
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #9ca3af;
+  font-family: system-ui;
+  font-size: 14px;
+}
+.empty-state__icon { font-size: 48px; margin-bottom: 1rem; }
+.alert-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  font-family: system-ui;
+  font-size: 14px;
+  margin-bottom: 1rem;
+}
+.search-bar {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-family: system-ui;
+  font-size: 14px;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-bar:focus { border-color: #16a34a; }
+.filter-bar { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.filter-chip {
+  padding: 5px 14px; border-radius: 99px; cursor: pointer;
+  font-family: system-ui; font-size: 13px; font-weight: 600;
+  border: 1px solid #e5e7eb; background: #fff; color: #6b7280;
+  transition: all 0.15s;
+}
+.filter-chip--active { border-color: #16a34a; background: #f0fdf4; color: #16a34a; }
