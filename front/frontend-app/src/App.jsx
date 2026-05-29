@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Mascotas from './pages/Mascotas'
 import Usuarios from './pages/Usuarios'
 import Reportes from './pages/Reportes'
+import Mapa from './pages/Mapa'
 import Login from './pages/Login'
 import './styles/global.css'
 
@@ -28,6 +29,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/mascotas" element={<Mascotas />} />
               <Route path="/reportes" element={<Reportes />} />
+              <Route path="/mapa" element={<Mapa />} />
               <Route path="/login" element={<Login />} />
 
               <Route path="/usuarios" element={
