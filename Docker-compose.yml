@@ -10,7 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: root1234
       MYSQL_DATABASE: sanosysalvos
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
