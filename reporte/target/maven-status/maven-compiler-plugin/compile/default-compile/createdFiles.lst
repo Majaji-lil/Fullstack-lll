@@ -1,0 +1,11 @@
+Reporte\reporte\controller\ReporteController.class
+Reporte\reporte\model\ReporteRequest.class
+Reporte\reporte\ReporteApplication.class
+Reporte\reporte\service\MascotaService.class
+Reporte\reporte\model\MascotaDTO.class
+Reporte\reporte\repository\ReporteRepository.class
+Reporte\reporte\model\UbicacionModel.class
+Reporte\reporte\service\ReporteService.class
+Reporte\reporte\service\UbicacionService.class
+Reporte\reporte\model\ReporteModel.class
+Reporte\reporte\repository\UbicacionRepository.class
