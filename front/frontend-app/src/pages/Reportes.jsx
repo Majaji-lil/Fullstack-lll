@@ -9,7 +9,50 @@ import Button from '../components/atoms/Button'
 import '../styles/organisms/Grid.css'
 import '../styles/pages/Reportes.css'
 
-const EMPTY_FORM = { descripcion: '', fechaHora: '', mascotaId: '', ubicacionId: '' }
+const COMUNAS = [
+    { nombre: 'Cerrillos', latitud: -33.4908, longitud: -70.7078 },
+    { nombre: 'Cerro Navia', latitud: -33.4258, longitud: -70.7373 },
+    { nombre: 'Conchalí', latitud: -33.3817, longitud: -70.6603 },
+    { nombre: 'El Bosque', latitud: -33.5680, longitud: -70.6683 },
+    { nombre: 'Estación Central', latitud: -33.4569, longitud: -70.6900 },
+    { nombre: 'Huechuraba', latitud: -33.3530, longitud: -70.6457 },
+    { nombre: 'Independencia', latitud: -33.4167, longitud: -70.6560 },
+    { font: 'La Cisterna', nombre: 'La Cisterna', latitud: -33.5267, longitud: -70.6636 },
+    { nombre: 'La Florida', latitud: -33.5167, longitud: -70.5833 },
+    { nombre: 'La Granja', latitud: -33.5333, longitud: -70.6333 },
+    { nombre: 'La Pintana', latitud: -33.5833, longitud: -70.6333 },
+    { nombre: 'La Reina', latitud: -33.4500, longitud: -70.5333 },
+    { nombre: 'Las Condes', latitud: -33.4110, longitud: -70.5680 },
+    { nombre: 'Lo Barnechea', latitud: -33.3500, longitud: -70.5167 },
+    { nombre: 'Lo Espejo', latitud: -33.5167, longitud: -70.6833 },
+    { nombre: 'Lo Prado', latitud: -33.4500, longitud: -70.7167 },
+    { nombre: 'Macul', latitud: -33.4833, longitud: -70.5833 },
+    { nombre: 'Maipú', latitud: -33.5167, longitud: -70.7667 },
+    { nombre: 'Ñuñoa', latitud: -33.4569, longitud: -70.5990 },
+    { nombre: 'Pedro Aguirre Cerda', latitud: -33.5000, longitud: -70.6833 },
+    { nombre: 'Peñalolén', latitud: -33.4833, longitud: -70.5333 },
+    { nombre: 'Providencia', latitud: -33.4326, longitud: -70.6189 },
+    { nombre: 'Pudahuel', latitud: -33.4333, longitud: -70.7667 },
+    { nombre: 'Quilicura', latitud: -33.3667, longitud: -70.7333 },
+    { nombre: 'Quinta Normal', latitud: -33.4333, longitud: -70.7000 },
+    { nombre: 'Recoleta', latitud: -33.4000, longitud: -70.6333 },
+    { nombre: 'Renca', latitud: -33.4000, longitud: -70.7167 },
+    { nombre: 'San Joaquín', latitud: -33.4833, longitud: -70.6333 },
+    { nombre: 'San Miguel', latitud: -33.5000, longitud: -70.6500 },
+    { nombre: 'San Ramón', latitud: -33.5500, longitud: -70.6500 },
+    { nombre: 'Santiago', latitud: -33.4489, longitud: -70.6693 },
+    { nombre: 'Vitacura', latitud: -33.3833, longitud: -70.5833 },
+]
+
+const EMPTY_FORM = {
+    descripcion: '',
+    fechaHora: '',
+    mascotaId: '',
+    crearNuevaMascota: false,
+    nuevaMascota: { nombre: '', especie: '', raza: '', color_caracteristica: '', tamano: '' },
+    comuna: '',
+    tipo: 'Perdida'
+}
 
 const formatFecha = (f) => {
     if (!f) return null
@@ -25,11 +68,7 @@ const buildMeta = (r) => {
     const partes = []
     if (r.mascotaNombre) partes.push(`🐾 ${r.mascotaNombre}`)
     if (r.fechaHora) partes.push(`📅 ${formatFecha(r.fechaHora)}`)
-    if (r.ubicacion) {
-        const u = r.ubicacion
-        const dir = [u.direccion, u.ciudad, u.departamento, u.pais].filter(Boolean).join(', ')
-        if (dir) partes.push(`📍 ${dir}`)
-    }
+    if (r.ubicacion?.departamento) partes.push(`📍 ${r.ubicacion.departamento}`)
     return partes.join('  ·  ')
 }
 
@@ -41,6 +80,10 @@ function Reportes() {
     const [modal, setModal] = useState(false)
     const [form, setForm] = useState(EMPTY_FORM)
     const [formError, setFormError] = useState('')
+    const [guardando, setGuardando] = useState(false)
+
+    // Filtro con soporte para 'Avistadas'
+    const [filtroActual, setFiltroActual] = useState('Todas')
 
     const cargar = () => {
         setLoading(true)
@@ -49,38 +92,103 @@ function Reportes() {
             .catch(() => setError('No se pudo conectar al servicio de reportes o mascotas'))
             .finally(() => setLoading(false))
     }
-    useEffect(() => { cargar() }, [])
 
-    const field = (key) => ({
-        value: form[key],
-        onChange: e => setForm({ ...form, [key]: e.target.value }),
-    })
+    useEffect(() => { cargar() }, [])
 
     const openCreate = () => { setForm(EMPTY_FORM); setFormError(''); setModal(true) }
     const closeModal = () => { setModal(false); setFormError('') }
 
-    const guardar = () => {
-        if (!form.descripcion) { setFormError('La descripción es obligatoria'); return }
-        if (!form.mascotaId) { setFormError('Debes seleccionar una mascota'); return }
+    const handleMascotaNuevaChange = (campo, valor) =>
+        setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
 
-        const fechaFormateada = form.fechaHora?.length === 16
-            ? `${form.fechaHora}:00`
-            : form.fechaHora || null
+    const guardar = async () => {
+        setFormError('')
 
-        const payload = {
-            descripcion: form.descripcion,
-            fechaHora: fechaFormateada,
-            mascotaId: Number(form.mascotaId),
-            ubicacionId: form.ubicacionId ? Number(form.ubicacionId) : null,
+        if (!form.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
+        if (!form.comuna) { setFormError('Debes seleccionar una comuna'); return }
+        if (!form.crearNuevaMascota && !form.mascotaId) {
+            setFormError('Selecciona una mascota o marca la opción de registrar una nueva'); return
+        }
+        if (form.crearNuevaMascota &&
+            (!form.nuevaMascota.nombre.trim() || !form.nuevaMascota.especie.trim())) {
+            setFormError('Nombre y especie de la mascota son obligatorios'); return
         }
 
-        axios.post(API_REPORTES, payload)
-            .then(() => { closeModal(); cargar() })
-            .catch(err => setFormError(
-                err.response?.status === 400
-                    ? 'No se encontró la mascota con ese ID.'
-                    : 'Error al crear el reporte'
-            ))
+        setGuardando(true)
+        let mascotaCreadaId = null
+
+        try {
+            let mascotaIdFinal = Number(form.mascotaId)
+            let nombreMascotaFinal = ''
+
+            if (form.crearNuevaMascota) {
+                const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, form.nuevaMascota)
+                mascotaIdFinal = mascotaGuardada.id
+                mascotaCreadaId = mascotaGuardada.id
+                nombreMascotaFinal = mascotaGuardada.nombre
+            } else {
+                const encontrada = mascotas.find(m => m.id === mascotaIdFinal)
+                nombreMascotaFinal = encontrada ? encontrada.nombre : 'Mascota'
+            }
+
+            const fechaFormateada = form.fechaHora?.length === 16
+                ? `${form.fechaHora}:00`
+                : form.fechaHora || null
+
+            const comunaData = COMUNAS.find(c => c.nombre === form.comuna)
+
+            // SOLUCIÓN AL ERROR 400: Se unificó 'descripcion' en una única propiedad sin duplicados
+            const payload = {
+                descripcion: `[${form.tipo}] ${form.descripcion.trim()}`,
+                fechaHora: fechaFormateada,
+                mascotaId: mascotaIdFinal,
+                mascotaNombre: nombreMascotaFinal,
+                ubicacion: {
+                    direccion: 'No especificada',
+                    ciudad: 'Santiago',
+                    departamento: form.comuna,
+                    pais: 'Chile',
+                    latitud: comunaData?.latitud ?? null,
+                    longitud: comunaData?.longitud ?? null,
+                }
+            }
+
+            await axios.post(API_REPORTES, payload)
+            closeModal()
+            cargar()
+
+        } catch (err) {
+            console.error('Error al guardar reporte:', err.response?.data || err.message)
+            if (mascotaCreadaId) {
+                try { await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`) } catch { }
+            }
+            const msg = err.response?.data?.message || 'Error 400: Parámetros incorrectos o cuerpo JSON mal estructurado.'
+            setFormError(msg)
+        } finally {
+            setGuardando(false)
+        }
+    }
+
+    // Lógica del filtro de Reportes ampliada a 4 estados
+    const reportesFiltrados = reportes.filter(r => {
+        if (filtroActual === 'Todas') return true
+        if (filtroActual === 'Perdidas') return r.descripcion?.startsWith('[Perdida]')
+        if (filtroActual === 'Avistadas') return r.descripcion?.startsWith('[Avistada]')
+        if (filtroActual === 'Encontradas') return r.descripcion?.startsWith('[Encontrada]')
+        return true
+    })
+
+    const obtenerColorBadge = (desc) => {
+        if (desc?.includes('[Perdida]')) return 'red'
+        if (desc?.includes('[Avistada]')) return 'orange'
+        return 'green' // Encontrada
+    }
+
+    const obtenerTextoBadge = (desc, defecto) => {
+        if (desc?.startsWith('[Perdida]')) return 'Perdida ⚠️'
+        if (desc?.startsWith('[Avistada]')) return 'Avistada 👀'
+        if (desc?.startsWith('[Encontrada]')) return 'Encontrada ✅'
+        return defecto
     }
 
     return (
@@ -89,66 +197,158 @@ function Reportes() {
             <div className="page-header">
                 <div className="page-header__text">
                     <h1>Reportes</h1>
-                    <p>{reportes.length} reporte{reportes.length !== 1 ? 's' : ''} registrado{reportes.length !== 1 ? 's' : ''}</p>
+                    <p>{reportesFiltrados.length} reporte{reportesFiltrados.length !== 1 ? 's' : ''} en pantalla</p>
                 </div>
                 <Button variant="primary" onClick={openCreate}>+ Nuevo reporte</Button>
+            </div>
+
+            {/* BARRA DE FILTROS ACTUALIZADA (4 OPCIONES) */}
+            <div className="reportes-filtros-bar" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <button
+                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Todas' ? '#4f46e5' : '#fff', color: filtroActual === 'Todas' ? '#fff' : '#000', fontWeight: '500' }}
+                    onClick={() => setFiltroActual('Todas')}
+                >
+                    Todas
+                </button>
+                <button
+                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Perdidas' ? '#ef4444' : '#fff', color: filtroActual === 'Perdidas' ? '#fff' : '#000', fontWeight: '500' }}
+                    onClick={() => setFiltroActual('Perdidas')}
+                >
+                    ⚠️ Perdidas
+                </button>
+                <button
+                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Avistadas' ? '#f59e0b' : '#fff', color: filtroActual === 'Avistadas' ? '#fff' : '#000', fontWeight: '500' }}
+                    onClick={() => setFiltroActual('Avistadas')}
+                >
+                    👀 Avistadas
+                </button>
+                <button
+                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Encontradas' ? '#10b981' : '#fff', color: filtroActual === 'Encontradas' ? '#fff' : '#000', fontWeight: '500' }}
+                    onClick={() => setFiltroActual('Encontradas')}
+                >
+                    ✅ Encontradas
+                </button>
             </div>
 
             {loading && <p className="reportes-loading">Cargando...</p>}
             {error && <div className="alert-error">⚠️ {error}</div>}
 
-            {!loading && !error && reportes.length === 0 && (
+            {!loading && !error && reportesFiltrados.length === 0 && (
                 <div className="empty-state">
                     <div className="empty-state__icon">📋</div>
-                    <p>No hay reportes registrados aún.</p>
+                    <p>No hay reportes para este filtro.</p>
                 </div>
             )}
 
             <div className="card-grid">
-                {reportes.map(r => (
+                {reportesFiltrados.map(r => (
                     <InfoCard
                         key={r.id}
-                        title={r.descripcion}
-                        badge={r.mascotaNombre}
-                        badgeColor="green"
+                        title={r.descripcion?.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '')}
+                        badge={obtenerTextoBadge(r.descripcion, r.mascotaNombre)}
+                        badgeColor={obtenerColorBadge(r.descripcion)}
                         meta={buildMeta(r)}
                     />
                 ))}
             </div>
 
             {modal && (
-                <Modal title="Nuevo reporte" onClose={closeModal} onSave={guardar} saveLabel="Publicar reporte">
+                <Modal
+                    title="Nuevo reporte"
+                    onClose={closeModal}
+                    onSave={guardar}
+                    saveLabel={guardando ? 'Publicando...' : 'Publicar reporte'}
+                >
+                    {/* SELECTOR DE ESTADO CON TRES OPCIONES REALES */}
+                    <div style={{ marginBottom: '15px' }}>
+                        <label className="reportes-select-label">Estado del Reporte *</label>
+                        <select
+                            className="reportes-select"
+                            value={form.tipo}
+                            onChange={e => setForm({ ...form, tipo: e.target.value })}
+                        >
+                            <option value="Perdida">Mascota Perdida ⚠️</option>
+                            <option value="Avistada">Mascota Avistada (Pregunta/Datos) 👀</option>
+                            <option value="Encontrada">Mascota Encontrada / Resguardada ✅</option>
+                        </select>
+                    </div>
 
-                    <Input label="Descripción *" placeholder="¿Qué pasó? Describe la situación..." textarea {...field('descripcion')} />
+                    <Input
+                        label="Descripción *"
+                        placeholder="¿Qué pasó? Describe la situación..."
+                        textarea
+                        value={form.descripcion}
+                        onChange={e => setForm({ ...form, descripcion: e.target.value })}
+                    />
+                    <Input
+                        label="Fecha y hora"
+                        type="datetime-local"
+                        value={form.fechaHora}
+                        onChange={e => setForm({ ...form, fechaHora: e.target.value })}
+                    />
 
-                    {mascotas.length > 0 ? (
-                        <div>
-                            <label className="reportes-select-label">Mascota *</label>
-                            <select
-                                className="reportes-select"
-                                value={form.mascotaId}
-                                onChange={e => setForm({ ...form, mascotaId: e.target.value })}
-                            >
-                                <option value="">Selecciona una mascota...</option>
-                                {mascotas.map(m => (
-                                    <option key={m.id} value={m.id}>
-                                        {m.nombre} {m.especie ? `(${m.especie})` : ''}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    ) : (
-                        <Input label="ID de mascota *" placeholder="ID numérico" type="number" {...field('mascotaId')} />
-                    )}
+                    <hr className="reportes-form-divider" />
 
-                    <Input label="Fecha y hora" type="datetime-local" {...field('fechaHora')} />
-                    <Input label="ID de ubicación (opcional)" type="number" placeholder="Si ya existe una ubicación" {...field('ubicacionId')} />
+                    {/* Sección Mascota */}
+                    <div className="reportes-mascota-section">
+                        <label className="checkbox-nueva-mascota-label">
+                            <input
+                                type="checkbox"
+                                checked={form.crearNuevaMascota}
+                                onChange={e => setForm({ ...form, crearNuevaMascota: e.target.checked, mascotaId: '' })}
+                            />
+                            <span>✨ La mascota no está en la lista (registrar ahora)</span>
+                        </label>
+
+                        {!form.crearNuevaMascota ? (
+                            <div style={{ marginTop: 10 }}>
+                                <label className="reportes-select-label">Mascota *</label>
+                                <select
+                                    className="reportes-select"
+                                    value={form.mascotaId}
+                                    onChange={e => setForm({ ...form, mascotaId: e.target.value })}
+                                >
+                                    <option value="">Selecciona una mascota...</option>
+                                    {mascotas.map(m => (
+                                        <option key={m.id} value={m.id}>
+                                            {m.nombre} {m.especie ? `(${m.especie})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="nueva-mascota-subform">
+                                <p className="subform-title">📝 Datos de la nueva mascota</p>
+                                <div className="subform-grid">
+                                    <Input label="Nombre *" placeholder="Ej: Firulais" value={form.nuevaMascota.nombre} onChange={e => handleMascotaNuevaChange('nombre', e.target.value)} />
+                                    <Input label="Especie *" placeholder="Ej: Perro" value={form.nuevaMascota.especie} onChange={e => handleMascotaNuevaChange('especie', e.target.value)} />
+                                    <Input label="Raza" placeholder="Ej: Quiltro" value={form.nuevaMascota.raza} onChange={e => handleMascotaNuevaChange('raza', e.target.value)} />
+                                    <Input label="Color / características" placeholder="Ej: Negro completo" value={form.nuevaMascota.color_caracteristica} onChange={e => handleMascotaNuevaChange('color_caracteristica', e.target.value)} />
+                                    <Input label="Tamaño" placeholder="Ej: Grande" value={form.nuevaMascota.tamano} onChange={e => handleMascotaNuevaChange('tamano', e.target.value)} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <hr className="reportes-form-divider" />
+
+                    {/* Ubicación */}
+                    <div className="reportes-ubicacion-section">
+                        <p className="subform-title">📍 Ubicación del suceso *</p>
+                        <label className="reportes-select-label">Comuna de Santiago *</label>
+                        <select
+                            className="reportes-select"
+                            value={form.comuna}
+                            onChange={e => setForm({ ...form, comuna: e.target.value })}
+                        >
+                            <option value="">-- Elige una comuna --</option>
+                            {COMUNAS.map(c => (
+                                <option key={c.nombre} value={c.nombre}>{c.nombre}</option>
+                            ))}
+                        </select>
+                    </div>
 
                     {formError && <div className="reportes-form-error">⚠️ {formError}</div>}
-
-                    <p className="reportes-form-note">
-                        Para asignar una ubicación nueva usa <code>PUT /api/reportes/{'{id}'}/ubicacion</code> después de crear el reporte.
-                    </p>
                 </Modal>
             )}
         </div>
