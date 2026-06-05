@@ -27,6 +27,12 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
+    public UserModel autenticar(String correo, String password) {
+        return userRepository.findByCorreo(correo)
+                .filter(user -> user.getPassword().equals(password))
+                .orElse(null);
+    }
+
     public void eliminar(Integer id) {
         userRepository.deleteById(id);
     }
