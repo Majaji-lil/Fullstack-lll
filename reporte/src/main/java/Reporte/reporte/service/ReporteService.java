@@ -62,7 +62,10 @@ public class ReporteService {
                 reporte.setUsuarioNombre(usuario.getNombres());
             }
         }
-        reporte.setUbicacion(ubicacionService.encontrarPorId(request.getUbicacionId()).orElse(null));
+        if (request.getUbicacionId() != null) {
+            reporte.setUbicacion(ubicacionService.encontrarPorId(request.getUbicacionId()).orElse(null));
+        }
+
         return repository.save(reporte);
 
 

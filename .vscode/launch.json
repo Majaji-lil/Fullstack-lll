@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ReporteApplication<reporte>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "Reporte.reporte.ReporteApplication",
+            "projectName": "reporte",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
