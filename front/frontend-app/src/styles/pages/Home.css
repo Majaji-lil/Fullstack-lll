@@ -1,0 +1,63 @@
+/* src/styles/pages/Home.css */
+.home-hero {
+    text-align: center;
+}
+
+.home-hero__label {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #b7791f;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: system-ui;
+    margin: 0 0 1rem;
+}
+
+.home-hero__sub {
+    max-width: 520px;
+    margin: 1rem auto 1.75rem;
+    color: #4c0519;
+    font-size: 15px;
+    font-family: system-ui;
+    line-height: 1.7;
+}
+
+.home-hero__actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.home-features__title-group {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 2rem;
+}
+
+.home-features__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.home-feature-card {
+    background: #fff;
+    border: 1px solid #e9e3d5;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(27, 67, 50, 0.04);
+}
+
+.home-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 1.25rem;
+}

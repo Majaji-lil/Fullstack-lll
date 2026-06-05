@@ -1,0 +1,13 @@
+/* src/styles/pages/Usuarios.css */
+.usuarios-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.usuarios-loading {
+    text-align: center;
+    padding: 3rem;
+    color: #9ca3af;
+    font-family: system-ui;
+}

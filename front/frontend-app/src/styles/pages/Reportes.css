@@ -1,0 +1,52 @@
+/* src/styles/pages/Reportes.css */
+.reportes-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.reportes-loading {
+    text-align: center;
+    padding: 3rem;
+    color: #9ca3af;
+    font-family: system-ui;
+}
+
+.reportes-select {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 7px;
+    border: 1px solid #d1d5db;
+    font-family: system-ui;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.reportes-form-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: system-ui;
+}
+
+.reportes-form-note {
+    font-size: 12px;
+    color: #9ca3af;
+    font-family: system-ui;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.reportes-select-label {
+    font-size: 13px;
+    color: #6b7280;
+    font-family: system-ui;
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
