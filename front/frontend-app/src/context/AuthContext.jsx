@@ -8,8 +8,15 @@ const ADMIN = { correo: 'admin@sanosysalvos.cl', password: 'admin1234' }
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [usuario, setUsuario] = useState(() => {
+    const usr = localStorage.getItem('usuario')
+    return usr ? JSON.parse(usr) : null
+  })
+
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('isAdmin') === 'true'
+  })
+
   const [error, setError] = useState('')
 
   const login = async (correo, password) => {
@@ -17,17 +24,25 @@ export function AuthProvider({ children }) {
 
     // Admin hardcodeado
     if (correo === ADMIN.correo && password === ADMIN.password) {
+      const adminUser = { id: 0, nombres: 'Administrador', correo: ADMIN.correo }
+
+      localStorage.setItem('usuario', JSON.stringify(adminUser))
+      localStorage.setItem('isAdmin', 'true')
+
       setIsAdmin(true)
-      setUsuario({ id: 0, nombres: 'Administrador', correo: ADMIN.correo })
+      setUsuario(adminUser)
       return true
     }
 
-    // Usuario normal — usa el nuevo POST /api/usuarios/login
     try {
       const { data: usuarioEncontrado } = await axios.post(
         `${API_USUARIOS}/login`,
         { correo, password }
       )
+
+      localStorage.setItem('usuario', JSON.stringify(usuarioEncontrado))
+      localStorage.setItem('isAdmin', 'false')
+
       setUsuario(usuarioEncontrado)
       setIsAdmin(false)
       return true
@@ -47,6 +62,10 @@ export function AuthProvider({ children }) {
       const { data: nuevoUsuario } = await axios.post(API_USUARIOS, {
         nombres, correo, password,
       })
+
+      localStorage.setItem('usuario', JSON.stringify(nuevoUsuario))
+      localStorage.setItem('isAdmin', 'false')
+
       setUsuario(nuevoUsuario)
       setIsAdmin(false)
       return true
@@ -61,6 +80,9 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
+    localStorage.removeItem('usuario')
+    localStorage.removeItem('isAdmin')
+
     setUsuario(null)
     setIsAdmin(false)
     setError('')
