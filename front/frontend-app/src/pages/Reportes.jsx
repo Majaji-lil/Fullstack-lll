@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_REPORTES, API_MASCOTAS } from '../api/urls'
+import { useAuth } from '../context/AuthContext'
 import InfoCard from '../components/molecules/InfoCard'
 import Modal from '../organisms/Modal'
 import Input from '../components/atoms/Input'
@@ -45,6 +46,7 @@ function Reportes() {
     const [modal, setModal] = useState(false)
     const [form, setForm] = useState(EMPTY_FORM)
     const [formError, setFormError] = useState('')
+    const { usuario } = useAuth()
 
     const cargar = () => {
         setLoading(true)
@@ -87,6 +89,7 @@ function Reportes() {
             fechaHora: fechaFormateada, // Enviamos el formato ISO correcto o null
             mascotaId: Number(form.mascotaId),
             ubicacionId: form.ubicacionId ? Number(form.ubicacionId) : null,
+            usuarioId: usuario?.id || null,
         }
 
         axios.post(API_REPORTES, payload)

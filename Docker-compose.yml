@@ -71,6 +71,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root1234
       MASCOTA_SERVICE_URL: http://mascotas-service:8081
+      USUARIO_SERVICE_URL: http://usuarios-service:8082
     depends_on:
       mysql:
         condition: service_healthy

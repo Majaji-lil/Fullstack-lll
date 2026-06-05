@@ -14,14 +14,16 @@ import Reporte.reporte.repository.ReporteRepository;
 @Service
 public class ReporteService {
 
+    private final UsuarioService usuarioService;
     private final ReporteRepository repository;
     private final MascotaService mascotaService;
     private final UbicacionService ubicacionService;
 
-    public ReporteService(ReporteRepository repository, MascotaService mascotaService, UbicacionService ubicacionService) {
+    public ReporteService(ReporteRepository repository, MascotaService mascotaService, UbicacionService ubicacionService, UsuarioService usuarioService) {
         this.repository = repository;
         this.mascotaService = mascotaService;
         this.ubicacionService = ubicacionService;
+        this.usuarioService = usuarioService;
     }
 
     public List<ReporteModel> listar() {
@@ -52,8 +54,18 @@ public class ReporteService {
         reporte.setFechaHora(fechaHora);
         reporte.setMascotaId(mascota.getId());
         reporte.setMascotaNombre(mascota.getNombre());
+
+        if (request.getUsuarioId() != null) {
+            var usuario = usuarioService.obtenerUsuarioPorId(request.getUsuarioId());
+            if (usuario != null) {
+                reporte.setUsuarioId(usuario.getId());
+                reporte.setUsuarioNombre(usuario.getNombres());
+            }
+        }
         reporte.setUbicacion(ubicacionService.encontrarPorId(request.getUbicacionId()).orElse(null));
         return repository.save(reporte);
+
+
     }
 
     public Optional<ReporteModel> asignarUbicacion(Long reporteId, UbicacionModel ubicacion) {
