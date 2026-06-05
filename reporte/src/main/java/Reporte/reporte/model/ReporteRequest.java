@@ -1,11 +1,15 @@
 package Reporte.reporte.model;
 
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class ReporteRequest {
 
     private String descripcion;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaHora;
+
     private Long mascotaId;
     private Long ubicacionId;
 

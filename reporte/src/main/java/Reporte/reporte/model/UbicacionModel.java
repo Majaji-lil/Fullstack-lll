@@ -32,4 +32,11 @@ public class UbicacionModel {
 
     @Column(nullable = false)
     private String pais;
+
+    // Para el mapa de calor — nullable porque no siempre se conocen
+    @Column(nullable = true)
+    private Double latitud;
+
+    @Column(nullable = true)
+    private Double longitud;
 }
