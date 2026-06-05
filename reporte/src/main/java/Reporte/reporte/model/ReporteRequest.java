@@ -4,12 +4,21 @@ import java.time.LocalDateTime;
 
 public class ReporteRequest {
 
+    private Long usuarioId;
     private String descripcion;
     private LocalDateTime fechaHora;
     private Long mascotaId;
     private Long ubicacionId;
 
     public ReporteRequest() {
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 
     public String getDescripcion() {
