@@ -82,7 +82,6 @@ function Reportes() {
     const [formError, setFormError] = useState('')
     const [guardando, setGuardando] = useState(false)
 
-    // Filtro con soporte para 'Avistadas'
     const [filtroActual, setFiltroActual] = useState('Todas')
 
     const cargar = () => {
@@ -102,73 +101,102 @@ function Reportes() {
         setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
 
     const guardar = async () => {
-        setFormError('')
+    setFormError('')
 
-        if (!form.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
-        if (!form.comuna) { setFormError('Debes seleccionar una comuna'); return }
-        if (!form.crearNuevaMascota && !form.mascotaId) {
-            setFormError('Selecciona una mascota o marca la opción de registrar una nueva'); return
-        }
-        if (form.crearNuevaMascota &&
-            (!form.nuevaMascota.nombre.trim() || !form.nuevaMascota.especie.trim())) {
-            setFormError('Nombre y especie de la mascota son obligatorios'); return
-        }
-
-        setGuardando(true)
-        let mascotaCreadaId = null
-
-        try {
-            let mascotaIdFinal = Number(form.mascotaId)
-            let nombreMascotaFinal = ''
-
-            if (form.crearNuevaMascota) {
-                const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, form.nuevaMascota)
-                mascotaIdFinal = mascotaGuardada.id
-                mascotaCreadaId = mascotaGuardada.id
-                nombreMascotaFinal = mascotaGuardada.nombre
-            } else {
-                const encontrada = mascotas.find(m => m.id === mascotaIdFinal)
-                nombreMascotaFinal = encontrada ? encontrada.nombre : 'Mascota'
-            }
-
-            const fechaFormateada = form.fechaHora?.length === 16
-                ? `${form.fechaHora}:00`
-                : form.fechaHora || null
-
-            const comunaData = COMUNAS.find(c => c.nombre === form.comuna)
-
-            // SOLUCIÓN AL ERROR 400: Se unificó 'descripcion' en una única propiedad sin duplicados
-            const payload = {
-                descripcion: `[${form.tipo}] ${form.descripcion.trim()}`,
-                fechaHora: fechaFormateada,
-                mascotaId: mascotaIdFinal,
-                mascotaNombre: nombreMascotaFinal,
-                ubicacion: {
-                    direccion: 'No especificada',
-                    ciudad: 'Santiago',
-                    departamento: form.comuna,
-                    pais: 'Chile',
-                    latitud: comunaData?.latitud ?? null,
-                    longitud: comunaData?.longitud ?? null,
-                }
-            }
-
-            await axios.post(API_REPORTES, payload)
-            closeModal()
-            cargar()
-
-        } catch (err) {
-            console.error('Error al guardar reporte:', err.response?.data || err.message)
-            if (mascotaCreadaId) {
-                try { await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`) } catch { }
-            }
-            const msg = err.response?.data?.message || 'Error 400: Parámetros incorrectos o cuerpo JSON mal estructurado.'
-            setFormError(msg)
-        } finally {
-            setGuardando(false)
-        }
+    // 1. Validaciones estrictas en el Frontend para evitar Nulos en la Base de Datos
+    if (!form.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
+    if (!form.comuna) { setFormError('Debes seleccionar una comuna'); return }
+    if (!form.fechaHora) { setFormError('La fecha y hora del suceso son obligatorias'); return }
+    
+    if (!form.crearNuevaMascota && !form.mascotaId) {
+        setFormError('Selecciona una mascota o marca la opción de registrar una nueva'); return
+    }
+    if (form.crearNuevaMascota &&
+        (!form.nuevaMascota.nombre.trim() || !form.nuevaMascota.especie.trim())) {
+        setFormError('Nombre y especie de la mascota son obligatorios'); return
     }
 
+    setGuardando(true)
+    let mascotaCreadaId = null 
+
+    try {
+        // 2. Obtener los identificadores de la mascota
+        let mascotaIdFinal = Number(form.mascotaId)
+        let nombreMascotaFinal = ''
+
+        if (form.crearNuevaMascota) {
+            const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, form.nuevaMascota)
+            mascotaIdFinal = mascotaGuardada.id
+            mascotaCreadaId = mascotaGuardada.id 
+            nombreMascotaFinal = mascotaGuardada.nombre
+        } else {
+            const encontrada = mascotas.find(m => m.id === mascotaIdFinal)
+            nombreMascotaFinal = encontrada ? encontrada.nombre : 'Mascota'
+        }
+
+        // 3. FORMATEO GARANTIZADO DE LA FECHA PARA @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        let fechaFormateada = form.fechaHora;
+        if (fechaFormateada.includes('T') && fechaFormateada.split(':').length === 2) {
+            fechaFormateada = `${fechaFormateada}:00`;
+        } else if (fechaFormateada.includes('.')) {
+            fechaFormateada = fechaFormateada.split('.')[0];
+        }
+
+        // 4. CONSTRUCCIÓN DEL PAYLOAD ADAPTADO A TU ENTIDAD JAVA
+        const payloadReporte = {
+            descripcion: `[${form.tipo}] ${form.descripcion.trim()}`,
+            fechaHora: fechaFormateada,
+            mascotaId: mascotaIdFinal,
+            mascotaNombre: nombreMascotaFinal, // Requerido por tu @Column(nullable = false)
+            ubicacion: null // 👈 CORRECCIÓN CRÍTICA: Cambiado de ubicacionId: null a ubicacion: null
+        }
+
+        console.log("Enviando JSON adaptado a la firma del Backend:", payloadReporte)
+
+        const { data: reporteCreado } = await axios.post(API_REPORTES, payloadReporte)
+
+        // 5. Inyección de la ubicación mediante PUT una vez creado el reporte con éxito
+        if (reporteCreado && reporteCreado.id) {
+            const comunaData = COMUNAS.find(c => c.nombre === form.comuna)
+            
+            const payloadUbicacion = {
+                direccion: 'No especificada',
+                ciudad: 'Santiago',
+                departamento: form.comuna,
+                pais: 'Chile',
+                latitud: comunaData?.latitud ?? null,
+                longitud: comunaData?.longitud ?? null,
+            }
+
+            await axios.put(`${API_REPORTES}/${reporteCreado.id}/ubicacion`, payloadUbicacion)
+        }
+
+        closeModal()
+        cargar()
+
+    } catch (err) {
+        console.error('Error crítico al procesar el flujo del reporte:', err.response?.data || err.message)
+        
+        // Reversión automatizada para no guardar mascotas sin reporte
+        if (mascotaCreadaId) {
+            try { 
+                await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`) 
+                console.log('Se limpió la mascota creada automáticamente para evitar registros huérfanos.')
+            } catch (delErr) {
+                console.error('No se pudo limpiar la mascota huérfana:', delErr)
+            }
+        }
+        
+        const msgError = err.response?.data?.message || 'Error interno del servidor (500). Verifica los tipos de datos en la consola de Java.'
+        setFormError(msgError)
+    } finally {
+        setGuardando(false)
+    }
+
+
+
+
+}
     // Lógica del filtro de Reportes ampliada a 4 estados
     const reportesFiltrados = reportes.filter(r => {
         if (filtroActual === 'Todas') return true
