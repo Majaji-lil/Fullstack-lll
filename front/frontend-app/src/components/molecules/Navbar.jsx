@@ -24,7 +24,6 @@ function Navbar() {
 
     const handleLogout = () => { logout(); navigate('/') }
 
-    // Iniciales para el avatar
     const initials = usuario?.nombres
         ? usuario.nombres.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
         : '?'
@@ -55,26 +54,21 @@ function Navbar() {
                     <Link to="/login">
                         <Button variant="ghost" size="sm">Iniciar sesión</Button>
                     </Link>
-                    <Link to="/login">
+                    <Link to="/registro">
                         <Button variant="primary" size="sm">Registrarse</Button>
                     </Link>
                 </div>
             )}
 
-            {/* Usuario logueado (no admin) */}
+            {/* Usuario logueado — avatar y nombre llevan al perfil */}
             {isLoggedIn && !isAdmin && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                        width: 30, height: 30, borderRadius: '50%',
-                        background: '#dcfce7', color: '#1b4332',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
-                    }}>
-                        {initials}
-                    </div>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: '#111827', fontFamily: 'system-ui' }}>
-                        {usuario?.nombres?.split(' ')[0]}
-                    </span>
+                <div className="navbar__user-zone">
+                    <Link to="/perfil" className="navbar__user-link">
+                        <div className="navbar__avatar">{initials}</div>
+                        <span className="navbar__username">
+                            {usuario?.nombres?.split(' ')[0]}
+                        </span>
+                    </Link>
                     <Button variant="ghost" size="sm" onClick={handleLogout}>Salir</Button>
                 </div>
             )}

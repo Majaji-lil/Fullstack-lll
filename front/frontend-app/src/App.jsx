@@ -8,9 +8,10 @@ import Mascotas from './pages/Mascotas'
 import Usuarios from './pages/Usuarios'
 import Reportes from './pages/Reportes'
 import Login from './pages/Login'
+import Profile from './pages/Profile'
 import './styles/global.css'
 
-// Solo admin puede entrar
+
 function RutaProtegida({ children }) {
   const { isAdmin } = useAuth()
   return isAdmin ? children : <Navigate to="/login" replace />
@@ -27,9 +28,9 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/mascotas" element={<Mascotas />} />
               <Route path="/reportes" element={<Reportes />} />
-              {/* /login y /registro van a la misma página con tabs */}
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Login />} />
+              <Route path="/perfil" element={<Profile />} />
               <Route path="/usuarios" element={
                 <RutaProtegida><Usuarios /></RutaProtegida>
               } />
