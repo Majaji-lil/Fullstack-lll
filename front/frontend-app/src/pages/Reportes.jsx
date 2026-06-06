@@ -17,7 +17,7 @@ const COMUNAS = [
     { nombre: 'Estación Central', latitud: -33.4569, longitud: -70.6900 },
     { nombre: 'Huechuraba', latitud: -33.3530, longitud: -70.6457 },
     { nombre: 'Independencia', latitud: -33.4167, longitud: -70.6560 },
-    { font: 'La Cisterna', nombre: 'La Cisterna', latitud: -33.5267, longitud: -70.6636 },
+    { nombre: 'La Cisterna', latitud: -33.5267, longitud: -70.6636 },
     { nombre: 'La Florida', latitud: -33.5167, longitud: -70.5833 },
     { nombre: 'La Granja', latitud: -33.5333, longitud: -70.6333 },
     { nombre: 'La Pintana', latitud: -33.5833, longitud: -70.6333 },
@@ -72,7 +72,6 @@ const buildMeta = (r) => {
     return partes.join('  ·  ')
 }
 
-// ✅ INTEGRACIÓN ARCHIVO NUEVO: Formateador estricto para Java @JsonFormat
 const formatearFechaParaJava = (fechaStr) => {
     if (!fechaStr) return null
     if (fechaStr.length === 16) return `${fechaStr}:00`
@@ -109,7 +108,6 @@ function Reportes() {
     const guardar = async () => {
         setFormError('')
 
-        // 1. Validaciones
         if (!form.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
         if (!form.comuna) { setFormError('Debes seleccionar una comuna'); return }
         if (!form.fechaHora) { setFormError('La fecha y hora del suceso son obligatorias'); return }
@@ -126,7 +124,6 @@ function Reportes() {
         let mascotaCreadaId = null
 
         try {
-            // 2. Obtener datos de la mascota
             let mascotaIdFinal = Number(form.mascotaId)
             let nombreMascotaFinal = ''
 
@@ -140,20 +137,18 @@ function Reportes() {
                 nombreMascotaFinal = encontrada ? encontrada.nombre : 'Mascota'
             }
 
-            // 3. payload adaptado sin el parámetro suelto "ubicacionId" que rompe el JPA 
             const payloadReporte = {
                 descripcion: `[${form.tipo}] ${form.descripcion.trim()}`,
-                fechaHora: formatearFechaParaJava(form.fechaHora), // ⚡ Usando el formateador limpio del archivo nuevo
+                fechaHora: formatearFechaParaJava(form.fechaHora),
                 mascotaId: mascotaIdFinal,
                 mascotaNombre: nombreMascotaFinal,
-                ubicacion: null // Evita fallos de deserialización en ReporteModel
+                ubicacion: null
             }
 
             console.log("Enviando JSON adaptado a la firma del Backend:", payloadReporte)
 
             const { data: reporteCreado } = await axios.post(API_REPORTES, payloadReporte)
 
-            // 4. Inyección de la comuna mediante PUT (Paso secuencial correcto)
             if (reporteCreado && reporteCreado.id) {
                 const comunaData = COMUNAS.find(c => c.nombre === form.comuna)
 
@@ -184,14 +179,13 @@ function Reportes() {
                 }
             }
 
-            const msgError = err.response?.data?.message || 'Error interno del servidor (500). Revisa que la firma en Java de ReporteRequest acepte este payload.'
+            const msgError = err.response?.data?.message || 'Error interno del servidor (500). Verifica los tipos de datos en la consola de Java.'
             setFormError(msgError)
         } finally {
             setGuardando(false)
         }
     }
 
-    // Lógica de los 4 estados
     const reportesFiltrados = reportes.filter(r => {
         if (filtroActual === 'Todas') return true
         if (filtroActual === 'Perdidas') return r.descripcion?.startsWith('[Perdida]')
@@ -223,28 +217,28 @@ function Reportes() {
                 <Button variant="primary" onClick={openCreate}>+ Nuevo reporte</Button>
             </div>
 
-            {/* BARRA DE FILTROS (4 OPCIONES) */}
-            <div className="reportes-filtros-bar" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            {/* Barra de Filtros utilizando clases dinámicas estructuradas */}
+            <div className="reportes-filtros-bar">
                 <button
-                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Todas' ? '#4f46e5' : '#fff', color: filtroActual === 'Todas' ? '#fff' : '#000', fontWeight: '500' }}
+                    className={`filtro-btn ${filtroActual === 'Todas' ? 'activo-todas' : ''}`}
                     onClick={() => setFiltroActual('Todas')}
                 >
                     Todas
                 </button>
                 <button
-                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Perdidas' ? '#ef4444' : '#fff', color: filtroActual === 'Perdidas' ? '#fff' : '#000', fontWeight: '500' }}
+                    className={`filtro-btn ${filtroActual === 'Perdidas' ? 'activo-perdidas' : ''}`}
                     onClick={() => setFiltroActual('Perdidas')}
                 >
                     ⚠️ Perdidas
                 </button>
                 <button
-                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Avistadas' ? '#f59e0b' : '#fff', color: filtroActual === 'Avistadas' ? '#fff' : '#000', fontWeight: '500' }}
+                    className={`filtro-btn ${filtroActual === 'Avistadas' ? 'activo-avistadas' : ''}`}
                     onClick={() => setFiltroActual('Avistadas')}
                 >
                     👀 Avistadas
                 </button>
                 <button
-                    style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Encontradas' ? '#10b981' : '#fff', color: filtroActual === 'Encontradas' ? '#fff' : '#000', fontWeight: '500' }}
+                    className={`filtro-btn ${filtroActual === 'Encontradas' ? 'activo-encontradas' : ''}`}
                     onClick={() => setFiltroActual('Encontradas')}
                 >
                     ✅ Encontradas
@@ -280,7 +274,8 @@ function Reportes() {
                     onSave={guardar}
                     saveLabel={guardando ? 'Publicando...' : 'Publicar reporte'}
                 >
-                    <div style={{ marginBottom: '15px' }}>
+                    {/* Selector de Estado */}
+                    <div className="reportes-form-group">
                         <label className="reportes-select-label">Estado del Reporte *</label>
                         <select
                             className="reportes-select"
@@ -300,6 +295,7 @@ function Reportes() {
                         value={form.descripcion}
                         onChange={e => setForm({ ...form, descripcion: e.target.value })}
                     />
+
                     <Input
                         label="Fecha y hora"
                         type="datetime-local"
@@ -321,7 +317,7 @@ function Reportes() {
                         </label>
 
                         {!form.crearNuevaMascota ? (
-                            <div style={{ marginTop: 10 }}>
+                            <div className="reportes-select-wrapper">
                                 <label className="reportes-select-label">Mascota *</label>
                                 <select
                                     className="reportes-select"
