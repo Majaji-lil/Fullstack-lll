@@ -18,7 +18,8 @@ public class ReporteService {
     private final MascotaService mascotaService;
     private final UbicacionService ubicacionService;
 
-    public ReporteService(ReporteRepository repository, MascotaService mascotaService, UbicacionService ubicacionService) {
+    public ReporteService(ReporteRepository repository, MascotaService mascotaService,
+            UbicacionService ubicacionService) {
         this.repository = repository;
         this.mascotaService = mascotaService;
         this.ubicacionService = ubicacionService;
@@ -52,7 +53,12 @@ public class ReporteService {
         reporte.setFechaHora(fechaHora);
         reporte.setMascotaId(mascota.getId());
         reporte.setMascotaNombre(mascota.getNombre());
-        reporte.setUbicacion(ubicacionService.encontrarPorId(request.getUbicacionId()).orElse(null));
+
+        if (request.getUbicacionId() != null) {
+            ubicacionService.encontrarPorId(request.getUbicacionId())
+                    .ifPresent(reporte::setUbicacion);
+        }
+
         return repository.save(reporte);
     }
 

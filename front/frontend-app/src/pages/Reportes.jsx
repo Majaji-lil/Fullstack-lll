@@ -72,6 +72,13 @@ const buildMeta = (r) => {
     return partes.join('  ·  ')
 }
 
+// ✅ INTEGRACIÓN ARCHIVO NUEVO: Formateador estricto para Java @JsonFormat
+const formatearFechaParaJava = (fechaStr) => {
+    if (!fechaStr) return null
+    if (fechaStr.length === 16) return `${fechaStr}:00`
+    return fechaStr
+}
+
 function Reportes() {
     const [reportes, setReportes] = useState([])
     const [mascotas, setMascotas] = useState([])
@@ -81,7 +88,6 @@ function Reportes() {
     const [form, setForm] = useState(EMPTY_FORM)
     const [formError, setFormError] = useState('')
     const [guardando, setGuardando] = useState(false)
-
     const [filtroActual, setFiltroActual] = useState('Todas')
 
     const cargar = () => {
@@ -101,103 +107,91 @@ function Reportes() {
         setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
 
     const guardar = async () => {
-    setFormError('')
+        setFormError('')
 
-    // 1. Validaciones estrictas en el Frontend para evitar Nulos en la Base de Datos
-    if (!form.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
-    if (!form.comuna) { setFormError('Debes seleccionar una comuna'); return }
-    if (!form.fechaHora) { setFormError('La fecha y hora del suceso son obligatorias'); return }
-    
-    if (!form.crearNuevaMascota && !form.mascotaId) {
-        setFormError('Selecciona una mascota o marca la opción de registrar una nueva'); return
-    }
-    if (form.crearNuevaMascota &&
-        (!form.nuevaMascota.nombre.trim() || !form.nuevaMascota.especie.trim())) {
-        setFormError('Nombre y especie de la mascota son obligatorios'); return
-    }
+        // 1. Validaciones
+        if (!form.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
+        if (!form.comuna) { setFormError('Debes seleccionar una comuna'); return }
+        if (!form.fechaHora) { setFormError('La fecha y hora del suceso son obligatorias'); return }
 
-    setGuardando(true)
-    let mascotaCreadaId = null 
-
-    try {
-        // 2. Obtener los identificadores de la mascota
-        let mascotaIdFinal = Number(form.mascotaId)
-        let nombreMascotaFinal = ''
-
-        if (form.crearNuevaMascota) {
-            const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, form.nuevaMascota)
-            mascotaIdFinal = mascotaGuardada.id
-            mascotaCreadaId = mascotaGuardada.id 
-            nombreMascotaFinal = mascotaGuardada.nombre
-        } else {
-            const encontrada = mascotas.find(m => m.id === mascotaIdFinal)
-            nombreMascotaFinal = encontrada ? encontrada.nombre : 'Mascota'
+        if (!form.crearNuevaMascota && !form.mascotaId) {
+            setFormError('Selecciona una mascota o marca la opción de registrar una nueva'); return
+        }
+        if (form.crearNuevaMascota &&
+            (!form.nuevaMascota.nombre.trim() || !form.nuevaMascota.especie.trim())) {
+            setFormError('Nombre y especie de la mascota son obligatorios'); return
         }
 
-        // 3. FORMATEO GARANTIZADO DE LA FECHA PARA @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-        let fechaFormateada = form.fechaHora;
-        if (fechaFormateada.includes('T') && fechaFormateada.split(':').length === 2) {
-            fechaFormateada = `${fechaFormateada}:00`;
-        } else if (fechaFormateada.includes('.')) {
-            fechaFormateada = fechaFormateada.split('.')[0];
-        }
+        setGuardando(true)
+        let mascotaCreadaId = null
 
-        // 4. CONSTRUCCIÓN DEL PAYLOAD ADAPTADO A TU ENTIDAD JAVA
-        const payloadReporte = {
-            descripcion: `[${form.tipo}] ${form.descripcion.trim()}`,
-            fechaHora: fechaFormateada,
-            mascotaId: mascotaIdFinal,
-            mascotaNombre: nombreMascotaFinal, // Requerido por tu @Column(nullable = false)
-            ubicacion: null // 👈 CORRECCIÓN CRÍTICA: Cambiado de ubicacionId: null a ubicacion: null
-        }
+        try {
+            // 2. Obtener datos de la mascota
+            let mascotaIdFinal = Number(form.mascotaId)
+            let nombreMascotaFinal = ''
 
-        console.log("Enviando JSON adaptado a la firma del Backend:", payloadReporte)
-
-        const { data: reporteCreado } = await axios.post(API_REPORTES, payloadReporte)
-
-        // 5. Inyección de la ubicación mediante PUT una vez creado el reporte con éxito
-        if (reporteCreado && reporteCreado.id) {
-            const comunaData = COMUNAS.find(c => c.nombre === form.comuna)
-            
-            const payloadUbicacion = {
-                direccion: 'No especificada',
-                ciudad: 'Santiago',
-                departamento: form.comuna,
-                pais: 'Chile',
-                latitud: comunaData?.latitud ?? null,
-                longitud: comunaData?.longitud ?? null,
+            if (form.crearNuevaMascota) {
+                const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, form.nuevaMascota)
+                mascotaIdFinal = mascotaGuardada.id
+                mascotaCreadaId = mascotaGuardada.id
+                nombreMascotaFinal = mascotaGuardada.nombre
+            } else {
+                const encontrada = mascotas.find(m => m.id === mascotaIdFinal)
+                nombreMascotaFinal = encontrada ? encontrada.nombre : 'Mascota'
             }
 
-            await axios.put(`${API_REPORTES}/${reporteCreado.id}/ubicacion`, payloadUbicacion)
-        }
-
-        closeModal()
-        cargar()
-
-    } catch (err) {
-        console.error('Error crítico al procesar el flujo del reporte:', err.response?.data || err.message)
-        
-        // Reversión automatizada para no guardar mascotas sin reporte
-        if (mascotaCreadaId) {
-            try { 
-                await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`) 
-                console.log('Se limpió la mascota creada automáticamente para evitar registros huérfanos.')
-            } catch (delErr) {
-                console.error('No se pudo limpiar la mascota huérfana:', delErr)
+            // 3. payload adaptado sin el parámetro suelto "ubicacionId" que rompe el JPA 
+            const payloadReporte = {
+                descripcion: `[${form.tipo}] ${form.descripcion.trim()}`,
+                fechaHora: formatearFechaParaJava(form.fechaHora), // ⚡ Usando el formateador limpio del archivo nuevo
+                mascotaId: mascotaIdFinal,
+                mascotaNombre: nombreMascotaFinal,
+                ubicacion: null // Evita fallos de deserialización en ReporteModel
             }
+
+            console.log("Enviando JSON adaptado a la firma del Backend:", payloadReporte)
+
+            const { data: reporteCreado } = await axios.post(API_REPORTES, payloadReporte)
+
+            // 4. Inyección de la comuna mediante PUT (Paso secuencial correcto)
+            if (reporteCreado && reporteCreado.id) {
+                const comunaData = COMUNAS.find(c => c.nombre === form.comuna)
+
+                const payloadUbicacion = {
+                    direccion: 'No especificada',
+                    ciudad: 'Santiago',
+                    departamento: form.comuna,
+                    pais: 'Chile',
+                    latitud: comunaData?.latitud ?? null,
+                    longitud: comunaData?.longitud ?? null,
+                }
+
+                await axios.put(`${API_REPORTES}/${reporteCreado.id}/ubicacion`, payloadUbicacion)
+            }
+
+            closeModal()
+            cargar()
+
+        } catch (err) {
+            console.error('Error crítico al procesar el flujo del reporte:', err.response?.data || err.message)
+
+            if (mascotaCreadaId) {
+                try {
+                    await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`)
+                    console.log('Se limpió la mascota huérfana para evitar inconsistencias.')
+                } catch (delErr) {
+                    console.error('No se pudo limpiar la mascota huérfana:', delErr)
+                }
+            }
+
+            const msgError = err.response?.data?.message || 'Error interno del servidor (500). Revisa que la firma en Java de ReporteRequest acepte este payload.'
+            setFormError(msgError)
+        } finally {
+            setGuardando(false)
         }
-        
-        const msgError = err.response?.data?.message || 'Error interno del servidor (500). Verifica los tipos de datos en la consola de Java.'
-        setFormError(msgError)
-    } finally {
-        setGuardando(false)
     }
 
-
-
-
-}
-    // Lógica del filtro de Reportes ampliada a 4 estados
+    // Lógica de los 4 estados
     const reportesFiltrados = reportes.filter(r => {
         if (filtroActual === 'Todas') return true
         if (filtroActual === 'Perdidas') return r.descripcion?.startsWith('[Perdida]')
@@ -209,7 +203,7 @@ function Reportes() {
     const obtenerColorBadge = (desc) => {
         if (desc?.includes('[Perdida]')) return 'red'
         if (desc?.includes('[Avistada]')) return 'orange'
-        return 'green' // Encontrada
+        return 'green'
     }
 
     const obtenerTextoBadge = (desc, defecto) => {
@@ -221,7 +215,6 @@ function Reportes() {
 
     return (
         <div className="reportes-page">
-
             <div className="page-header">
                 <div className="page-header__text">
                     <h1>Reportes</h1>
@@ -230,7 +223,7 @@ function Reportes() {
                 <Button variant="primary" onClick={openCreate}>+ Nuevo reporte</Button>
             </div>
 
-            {/* BARRA DE FILTROS ACTUALIZADA (4 OPCIONES) */}
+            {/* BARRA DE FILTROS (4 OPCIONES) */}
             <div className="reportes-filtros-bar" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 <button
                     style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: filtroActual === 'Todas' ? '#4f46e5' : '#fff', color: filtroActual === 'Todas' ? '#fff' : '#000', fontWeight: '500' }}
@@ -287,7 +280,6 @@ function Reportes() {
                     onSave={guardar}
                     saveLabel={guardando ? 'Publicando...' : 'Publicar reporte'}
                 >
-                    {/* SELECTOR DE ESTADO CON TRES OPCIONES REALES */}
                     <div style={{ marginBottom: '15px' }}>
                         <label className="reportes-select-label">Estado del Reporte *</label>
                         <select
@@ -360,7 +352,7 @@ function Reportes() {
 
                     <hr className="reportes-form-divider" />
 
-                    {/* Ubicación */}
+                    {/* Sección Ubicación */}
                     <div className="reportes-ubicacion-section">
                         <p className="subform-title">📍 Ubicación del suceso *</p>
                         <label className="reportes-select-label">Comuna de Santiago *</label>
