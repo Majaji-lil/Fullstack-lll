@@ -1,7 +1,7 @@
-// src/components/molecules/Navbar.jsx
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Button from '../atoms/Button'
+import ThemeToggle from './ThemeToggle'
 import '../../styles/molecules/Navbar.css'
 
 const PUBLIC_LINKS = [
@@ -30,7 +30,6 @@ function Navbar() {
 
     return (
         <nav className="navbar">
-
             <Link to="/" className="navbar__brand">
                 <div className="navbar__logo">🐾</div>
                 <span className="navbar__title">Sanos y Salvos</span>
@@ -48,39 +47,41 @@ function Navbar() {
 
             <div className="navbar__spacer" />
 
-            {/* Sin sesión */}
-            {!isLoggedIn && (
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <Link to="/login">
-                        <Button variant="ghost" size="sm">Iniciar sesión</Button>
-                    </Link>
-                    <Link to="/registro">
-                        <Button variant="primary" size="sm">Registrarse</Button>
-                    </Link>
-                </div>
-            )}
+            {/* Toggle de tema — siempre visible en la barra */}
+            <ThemeToggle />
 
-            {/* Usuario logueado — avatar y nombre llevan al perfil */}
-            {isLoggedIn && !isAdmin && (
-                <div className="navbar__user-zone">
-                    <Link to="/perfil" className="navbar__user-link">
-                        <div className="navbar__avatar">{initials}</div>
-                        <span className="navbar__username">
-                            {usuario?.nombres?.split(' ')[0]}
-                        </span>
-                    </Link>
-                    <Button variant="ghost" size="sm" onClick={handleLogout}>Salir</Button>
-                </div>
-            )}
+            {/* Zona de autenticación unificada sin estilos inline molestos */}
+            <div className="navbar__auth-zone">
+                {!isLoggedIn && (
+                    <>
+                        <Link to="/login">
+                            <Button variant="ghost" size="sm">Iniciar sesión</Button>
+                        </Link>
+                        <Link to="/registro">
+                            <Button variant="primary" size="sm">Registrarse</Button>
+                        </Link>
+                    </>
+                )}
 
-            {/* Admin */}
-            {isAdmin && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="navbar__admin-badge">Admin</span>
-                    <Button variant="ghost" size="sm" onClick={handleLogout}>Cerrar sesión</Button>
-                </div>
-            )}
+                {isLoggedIn && !isAdmin && (
+                    <div className="navbar__user-zone">
+                        <Link to="/perfil" className="navbar__user-link">
+                            <div className="navbar__avatar">{initials}</div>
+                            <span className="navbar__username">
+                                {usuario?.nombres?.split(' ')[0]}
+                            </span>
+                        </Link>
+                        <Button variant="ghost" size="sm" onClick={handleLogout}>Salir</Button>
+                    </div>
+                )}
 
+                {isAdmin && (
+                    <div className="navbar__user-zone">
+                        <span className="navbar__admin-badge">Admin</span>
+                        <Button variant="ghost" size="sm" onClick={handleLogout}>Cerrar sesión</Button>
+                    </div>
+                )}
+            </div>
         </nav>
     )
 }

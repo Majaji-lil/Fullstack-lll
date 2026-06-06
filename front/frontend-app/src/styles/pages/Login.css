@@ -1,11 +1,13 @@
 /* src/styles/pages/Login.css */
 .login-page {
-    min-height: calc(100vh - 56px);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fcf9f2;
-    padding: 2rem;
+    min-height: calc(100vh - 56px);
+    /* 💡 Asegúrate de que use esta variable exacta: */
+    background: var(--bg-page);
+    padding: 2rem 1rem;
+    transition: background 0.25s ease;
 }
 
 .login-card {
@@ -38,11 +40,12 @@
 }
 
 .login-card__title {
-    font-weight: 700;
-    font-size: 20px;
-    color: #1b4332;
     font-family: Georgia, serif;
-    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2a9b6c;
+    margin: 0;
+    transition: color 0.25s ease;
 }
 
 .login-card__subtitle {

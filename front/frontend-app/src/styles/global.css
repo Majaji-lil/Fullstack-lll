@@ -1,3 +1,6 @@
+/* src/styles/global.css */
+@import './theme.css';
+
 *,
 *::before,
 *::after {
@@ -6,8 +9,7 @@
 
 body {
     margin: 0;
-    background-color: #fcf9f2;
-    color: #1b4332;
+    /* Las propiedades de background y color ya se heredan de theme.css de forma dinámica */
 }
 
 a {
@@ -15,6 +17,7 @@ a {
     text-decoration: none;
 }
 
+/* Modificadores de margen */
 .mt-sm {
     margin-top: 0.5rem;
 }
@@ -27,10 +30,11 @@ a {
     margin-top: 1.75rem;
 }
 
+/* Títulos y etiquetas del formulario */
 .hero-label {
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #b7791f !important;
+    color: var(--text-muted) !important;
     font-weight: 600 !important;
 }
 
@@ -38,77 +42,60 @@ a {
     max-width: 520px;
     margin-left: auto !important;
     margin-right: auto !important;
-    color: #4c0519;
+    color: var(--text-secondary);
+    /* Cambia de color según el tema */
+    transition: color 0.25s ease;
 }
 
-.hero-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.section-title-group {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 2rem;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-}
-
+/* Estilos de la tarjeta contenedora del Login (Aplica a .feature-card o la clase que uses en tu login) */
+.login-card,
 .feature-card {
-    background: #ffffff;
-    border: 1px solid #e9e3d5;
+    background: var(--bg-card);
+    /* Blanco en claro, gris oscuro en tema oscuro */
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    /* Letras oscuras en claro, blancas en oscuro */
     border-radius: 12px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    box-shadow: 0 4px 12px rgba(27, 67, 50, 0.04);
+    padding: 2.5rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }
 
+/* 💡 ESTILOS PARA LOS INPUTS (Cajas de Correo y Contraseña) */
+input[type="email"],
+input[type="password"],
+input[type="text"],
+.form-input {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--border-input);
+    padding: 10px 14px;
+    border-radius: 6px;
+    width: 100%;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+input:focus {
+    border-color: var(--text-muted);
+}
+
+/* Etiquetas encima de los inputs (Correo, Contraseña) */
+label,
+.form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+    transition: color 0.25s ease;
+}
+
+/* Footer adaptable */
 .main-footer {
-    background-color: #1b4332;
+    background-color: var(--brand-dark);
     color: #f4f0e6;
     padding: 2.5rem 1.5rem;
     text-align: center;
     font-family: system-ui, sans-serif;
-    border-top: 4px solid #b7791f;
+    border-top: 4px solid var(--text-muted);
     margin-top: auto;
-}
-
-.main-footer__inner {
-    max-width: 760px;
-    margin: 0 auto;
-}
-
-.main-footer__text {
-    font-size: 14px;
-    margin: 6px 0;
-    line-height: 1.5;
-}
-
-.main-footer__text strong {
-    color: #d97706;
-}
-
-.main-footer__divider {
-    height: 1px;
-    background: rgba(251, 207, 232, 0.2);
-    margin: 1.25rem auto;
-    max-width: 200px;
-}
-
-.main-footer__credits {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #fbcfe8;
-    opacity: 0.8;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }

@@ -118,3 +118,9 @@
   color: #111827;
   font-family: system-ui;
 }
+
+.navbar__auth-zone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

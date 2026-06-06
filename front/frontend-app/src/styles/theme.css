@@ -1,0 +1,66 @@
+/* src/styles/theme.css */
+
+/* ── Tema claro (Por defecto) ─────────────────────────────────────────────── */
+:root,
+[data-tema="claro"] {
+  --bg-page: #fcf9f2;
+  /* Tu color crema original */
+  --bg-card: #ffffff;
+  /* Fondo de la tarjeta central */
+  --bg-secondary: #f4f0e6;
+  --bg-hover: #e9e3d5;
+
+  --border-color: #e9e3d5;
+  --border-input: #d1d5db;
+
+  --text-primary: #1b4332;
+  /* Tu verde oscuro original para las letras */
+  --text-secondary: #4c0519;
+  --text-muted: #b7791f;
+
+  --navbar-bg: #ffffff;
+  --navbar-border: #e5e7eb;
+
+  --brand-green: #1b4332;
+  --brand-dark: #1b4332;
+
+  --input-bg: #ffffff;
+  --input-text: #1b4332;
+}
+
+/* ── Tema oscuro ──────────────────────────────────────────────────────────── */
+[data-tema="oscuro"] {
+  --bg-page: #0f172a;
+  /* Fondo oscuro para toda la página */
+  --bg-card: #1e293b;
+  /* Fondo oscuro para la tarjeta de login */
+  --bg-secondary: #334155;
+  --bg-hover: #475569;
+
+  --border-color: #334155;
+  --border-input: #475569;
+
+  --text-primary: #f1f5f9;
+  /* Letras blancas/claras automáticas */
+  --text-secondary: #cbd5e1;
+  /* Subtítulos claros */
+  --text-muted: #fbbf24;
+
+  --navbar-bg: #1e293b;
+  --navbar-border: #334155;
+
+  --brand-green: #22c55e;
+  --brand-dark: #0f172a;
+
+  --input-bg: #1e293b;
+  /* Cajas de texto oscuras */
+  --input-text: #f1f5f9;
+  /* Texto que escribe el usuario en blanco */
+}
+
+/* Aplicación global al cuerpo de la aplicación */
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
