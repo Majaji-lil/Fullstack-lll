@@ -22,6 +22,9 @@ public class UbicacionModel {
     private Long id;
 
     @Column(nullable = false)
+    private String comuna;
+
+    @Column(nullable = false)
     private String latitud;
 
     @Column(nullable = false)
