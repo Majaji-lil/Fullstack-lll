@@ -22,14 +22,11 @@ public class UbicacionModel {
     private Long id;
 
     @Column(nullable = false)
-    private String direccion;
+    private String comuna;
 
     @Column(nullable = false)
-    private String ciudad;
+    private String latitud;
 
     @Column(nullable = false)
-    private String departamento;
-
-    @Column(nullable = false)
-    private String pais;
+    private String longitud;
 }

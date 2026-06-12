@@ -8,6 +8,7 @@ const PUBLIC_LINKS = [
     { to: '/', label: 'Inicio' },
     { to: '/mascotas', label: 'Mascotas' },
     { to: '/reportes', label: 'Reportes' },
+    { to: '/mapa', label: 'Mapa' },
 ]
 
 const ADMIN_LINKS = [

@@ -76,7 +76,7 @@ services:
       mysql:
         condition: service_healthy
     networks:
-     - microservicios-net
+      - microservicios-net
 
   api-gateway:
     build:
@@ -105,6 +105,9 @@ services:
     restart: always
     ports:
       - "5173:80"
+    volumes:
+      - ./front/frontend-app:/app
+      - /app/node_modules  # <-- FIX: Prevents host machine from wiping out Vite
     depends_on:
       - api-gateway
     networks:
