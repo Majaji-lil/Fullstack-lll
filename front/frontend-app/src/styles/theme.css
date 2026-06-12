@@ -14,7 +14,6 @@
   --border-input: #d1d5db;
 
   --text-primary: #1b4332;
-  /* Tu verde oscuro original para las letras */
   --text-secondary: #4c0519;
   --text-muted: #b7791f;
 
@@ -31,19 +30,15 @@
 /* ── Tema oscuro ──────────────────────────────────────────────────────────── */
 [data-tema="oscuro"] {
   --bg-page: #0f172a;
-  /* Fondo oscuro para toda la página */
   --bg-card: #1e293b;
-  /* Fondo oscuro para la tarjeta de login */
   --bg-secondary: #334155;
   --bg-hover: #475569;
 
   --border-color: #334155;
   --border-input: #475569;
 
-  --text-primary: #f1f5f9;
-  /* Letras blancas/claras automáticas */
+  --text-primary: #4593c7;
   --text-secondary: #cbd5e1;
-  /* Subtítulos claros */
   --text-muted: #fbbf24;
 
   --navbar-bg: #1e293b;
@@ -53,12 +48,9 @@
   --brand-dark: #0f172a;
 
   --input-bg: #1e293b;
-  /* Cajas de texto oscuras */
   --input-text: #f1f5f9;
-  /* Texto que escribe el usuario en blanco */
 }
 
-/* Aplicación global al cuerpo de la aplicación */
 body {
   background-color: var(--bg-page);
   color: var(--text-primary);
