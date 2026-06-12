@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// DTO puro — sin anotaciones JPA (@Entity, @Column, @Id)
-// Solo sirve para recibir la respuesta del microservicio de mascotas
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

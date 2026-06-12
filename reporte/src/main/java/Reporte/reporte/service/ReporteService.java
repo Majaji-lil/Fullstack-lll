@@ -34,6 +34,7 @@ public class ReporteService {
     }
 
     public ReporteModel guardar(ReporteRequest request) {
+        System.out.println("VERSION NUEVA DEL SERVICIO");
         if (request == null || request.getMascotaId() == null) {
             return null;
         }

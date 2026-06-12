@@ -51,7 +51,7 @@ const EMPTY_FORM = {
     crearNuevaMascota: false,
     nuevaMascota: { nombre: '', especie: '', raza: '', color_caracteristica: '', tamano: '' },
     comuna: '',
-    tipo: 'Perdida'
+    tipo: 'Perdida',
 }
 
 const formatFecha = (f) => {
@@ -66,16 +66,29 @@ const formatFecha = (f) => {
 
 const buildMeta = (r) => {
     const partes = []
-    if (r.mascotaNombre) partes.push(`🐾 ${r.mascotaNombre}`)
-    if (r.fechaHora) partes.push(`📅 ${formatFecha(r.fechaHora)}`)
-    if (r.ubicacion?.departamento) partes.push(`📍 ${r.ubicacion.departamento}`)
+    if (r.mascotaNombre) partes.push('🐾 ' + r.mascotaNombre)
+    if (r.fechaHora) partes.push('📅 ' + formatFecha(r.fechaHora))
+    if (r.ubicacion && r.ubicacion.departamento) partes.push('📍 ' + r.ubicacion.departamento)
     return partes.join('  ·  ')
 }
 
 const formatearFechaParaJava = (fechaStr) => {
     if (!fechaStr) return null
-    if (fechaStr.length === 16) return `${fechaStr}:00`
+    if (fechaStr.length === 16) return fechaStr + ':00'
     return fechaStr
+}
+
+const obtenerColorBadge = (desc) => {
+    if (desc && desc.includes('[Perdida]')) return 'red'
+    if (desc && desc.includes('[Avistada]')) return 'orange'
+    return 'green'
+}
+
+const obtenerTextoBadge = (desc, defecto) => {
+    if (desc && desc.startsWith('[Perdida]')) return 'Perdida'
+    if (desc && desc.startsWith('[Avistada]')) return 'Avistada'
+    if (desc && desc.startsWith('[Encontrada]')) return 'Encontrada'
+    return defecto
 }
 
 function Reportes() {
@@ -107,79 +120,109 @@ function Reportes() {
 
     const guardar = async () => {
         setFormError('')
+        const f = form
 
-        if (!form.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
-        if (!form.comuna) { setFormError('Debes seleccionar una comuna'); return }
-        if (!form.fechaHora) { setFormError('La fecha y hora del suceso son obligatorias'); return }
+        if (!f.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
+        if (!f.comuna) { setFormError('Debes seleccionar una comuna'); return }
+        if (!f.fechaHora) { setFormError('La fecha y hora del suceso son obligatorias'); return }
 
-        if (!form.crearNuevaMascota && !form.mascotaId) {
-            setFormError('Selecciona una mascota o marca la opción de registrar una nueva'); return
+        if (!f.crearNuevaMascota && !f.mascotaId) {
+            setFormError('Selecciona una mascota o marca la opción de registrar una nueva')
+            return
         }
-        if (form.crearNuevaMascota &&
-            (!form.nuevaMascota.nombre.trim() || !form.nuevaMascota.especie.trim())) {
-            setFormError('Nombre y especie de la mascota son obligatorios'); return
+        if (f.crearNuevaMascota && (!f.nuevaMascota.nombre.trim() || !f.nuevaMascota.especie.trim())) {
+            setFormError('Nombre y especie de la mascota son obligatorios')
+            return
         }
 
         setGuardando(true)
         let mascotaCreadaId = null
 
-        try {
-            let mascotaIdFinal = Number(form.mascotaId)
-            let nombreMascotaFinal = ''
+        console.group('%c🚀 FLUJO DE CREACIÓN DE REPORTE', 'color: #aa3bff; font-weight: bold; font-size: 12px;');
+        console.log('📝 Estado actual del formulario capturado:', f);
 
-            if (form.crearNuevaMascota) {
-                const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, form.nuevaMascota)
+        try {
+            let mascotaIdFinal = Number(f.mascotaId)
+
+            if (f.crearNuevaMascota) {
+                // ✅ Mapeamos las propiedades al formato camelCase que espera Java Spring Boot
+                const payloadMascotaNueva = {
+                    nombre: f.nuevaMascota.nombre.trim(),
+                    especie: f.nuevaMascota.especie.trim(),
+                    raza: f.nuevaMascota.raza.trim() || null,
+                    colorCaracteristica: f.nuevaMascota.color_caracteristica.trim() || null, // 👈 Convertido a camelCase
+                    tamano: f.nuevaMascota.tamano.trim() || null
+                }
+
+                console.log('🐾 [Paso 1/3] Enviando nueva mascota limpia al microservicio...', payloadMascotaNueva);
+                const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, payloadMascotaNueva)
+
                 mascotaIdFinal = mascotaGuardada.id
                 mascotaCreadaId = mascotaGuardada.id
-                nombreMascotaFinal = mascotaGuardada.nombre
+                console.log('%c✅ Mascota creada con éxito. ID recibido:', 'color: green', mascotaIdFinal);
             } else {
-                const encontrada = mascotas.find(m => m.id === mascotaIdFinal)
-                nombreMascotaFinal = encontrada ? encontrada.nombre : 'Mascota'
+                console.log('🐾 [Paso 1/3] Utilizando ID de mascota existente:', mascotaIdFinal);
             }
 
             const payloadReporte = {
-                descripcion: `[${form.tipo}] ${form.descripcion.trim()}`,
-                fechaHora: formatearFechaParaJava(form.fechaHora),
+                descripcion: '[' + f.tipo + '] ' + f.descripcion.trim(),
+                fechaHora: formatearFechaParaJava(f.fechaHora),
                 mascotaId: mascotaIdFinal,
-                mascotaNombre: nombreMascotaFinal,
                 ubicacion: null
             }
 
-            console.log("Enviando JSON adaptado a la firma del Backend:", payloadReporte)
+            console.log('📦 [Paso 2/3] Enviando JSON adaptado a la firma del Backend:', payloadReporte);
 
             const { data: reporteCreado } = await axios.post(API_REPORTES, payloadReporte)
+            console.log('%c✅ Reporte Base creado con éxito en Backend:', 'color: green', reporteCreado);
 
             if (reporteCreado && reporteCreado.id) {
-                const comunaData = COMUNAS.find(c => c.nombre === form.comuna)
+                const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
 
                 const payloadUbicacion = {
                     direccion: 'No especificada',
                     ciudad: 'Santiago',
-                    departamento: form.comuna,
+                    departamento: f.comuna,
                     pais: 'Chile',
-                    latitud: comunaData?.latitud ?? null,
-                    longitud: comunaData?.longitud ?? null,
+                    latitud: comunaData ? comunaData.latitud : null,
+                    longitud: comunaData ? comunaData.longitud : null,
                 }
 
-                await axios.put(`${API_REPORTES}/${reporteCreado.id}/ubicacion`, payloadUbicacion)
+                console.log(`📍 [Paso 3/3] Enlazando ubicación definitiva por PUT a /api/reportes/${reporteCreado.id}/ubicacion`, payloadUbicacion);
+                const { data: reporteCompleto } = await axios.put(API_REPORTES + '/' + reporteCreado.id + '/ubicacion', payloadUbicacion)
+                console.log('%c✅ Ubicación asignada correctamente. Proceso completado.', 'color: green', reporteCompleto);
             }
 
+            console.groupEnd();
             closeModal()
             cargar()
 
         } catch (err) {
-            console.error('Error crítico al procesar el flujo del reporte:', err.response?.data || err.message)
+            console.groupEnd();
+            console.group('%c❌ FALLO EN EL FLUJO DEL REPORTE', 'color: red; font-weight: bold;');
 
-            if (mascotaCreadaId) {
-                try {
-                    await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`)
-                    console.log('Se limpió la mascota huérfana para evitar inconsistencias.')
-                } catch (delErr) {
-                    console.error('No se pudo limpiar la mascota huérfana:', delErr)
-                }
+            if (err.response) {
+                console.error('Estatus de respuesta del Backend:', err.response.status);
+                console.error('Cuerpo detallado del error del servidor:', err.response.data);
+            } else {
+                console.error('Error de comunicación / red:', err.message);
             }
 
-            const msgError = err.response?.data?.message || 'Error interno del servidor (500). Verifica los tipos de datos en la consola de Java.'
+            // 🧹 Mecanismo de Rollback automático en caso de que falle el reporte pero la mascota se haya creado
+            if (mascotaCreadaId) {
+                try {
+                    console.warn('🧹 Iniciando rollback: Eliminando mascota huérfana con ID:', mascotaCreadaId);
+                    await axios.delete(API_MASCOTAS + '/' + mascotaCreadaId)
+                    console.log('Se limpió la mascota huérfana para evitar inconsistencias.');
+                } catch (delErr) {
+                    console.error('Falló la limpieza de la mascota huérfana:', delErr.message)
+                }
+            }
+            console.groupEnd();
+
+            const msgError = (err.response && err.response.data && err.response.data.message)
+                ? err.response.data.message
+                : 'Error crítico al procesar el flujo del reporte. Revisa los logs en la consola del navegador.'
             setFormError(msgError)
         } finally {
             setGuardando(false)
@@ -188,24 +231,11 @@ function Reportes() {
 
     const reportesFiltrados = reportes.filter(r => {
         if (filtroActual === 'Todas') return true
-        if (filtroActual === 'Perdidas') return r.descripcion?.startsWith('[Perdida]')
-        if (filtroActual === 'Avistadas') return r.descripcion?.startsWith('[Avistada]')
-        if (filtroActual === 'Encontradas') return r.descripcion?.startsWith('[Encontrada]')
+        if (filtroActual === 'Perdidas') return r.descripcion && r.descripcion.startsWith('[Perdida]')
+        if (filtroActual === 'Avistadas') return r.descripcion && r.descripcion.startsWith('[Avistada]')
+        if (filtroActual === 'Encontradas') return r.descripcion && r.descripcion.startsWith('[Encontrada]')
         return true
     })
-
-    const obtenerColorBadge = (desc) => {
-        if (desc?.includes('[Perdida]')) return 'red'
-        if (desc?.includes('[Avistada]')) return 'orange'
-        return 'green'
-    }
-
-    const obtenerTextoBadge = (desc, defecto) => {
-        if (desc?.startsWith('[Perdida]')) return 'Perdida ⚠️'
-        if (desc?.startsWith('[Avistada]')) return 'Avistada 👀'
-        if (desc?.startsWith('[Encontrada]')) return 'Encontrada ✅'
-        return defecto
-    }
 
     return (
         <div className="reportes-page">
@@ -217,32 +247,11 @@ function Reportes() {
                 <Button variant="primary" onClick={openCreate}>+ Nuevo reporte</Button>
             </div>
 
-            {/* Barra de Filtros utilizando clases dinámicas estructuradas */}
             <div className="reportes-filtros-bar">
-                <button
-                    className={`filtro-btn ${filtroActual === 'Todas' ? 'activo-todas' : ''}`}
-                    onClick={() => setFiltroActual('Todas')}
-                >
-                    Todas
-                </button>
-                <button
-                    className={`filtro-btn ${filtroActual === 'Perdidas' ? 'activo-perdidas' : ''}`}
-                    onClick={() => setFiltroActual('Perdidas')}
-                >
-                    ⚠️ Perdidas
-                </button>
-                <button
-                    className={`filtro-btn ${filtroActual === 'Avistadas' ? 'activo-avistadas' : ''}`}
-                    onClick={() => setFiltroActual('Avistadas')}
-                >
-                    👀 Avistadas
-                </button>
-                <button
-                    className={`filtro-btn ${filtroActual === 'Encontradas' ? 'activo-encontradas' : ''}`}
-                    onClick={() => setFiltroActual('Encontradas')}
-                >
-                    ✅ Encontradas
-                </button>
+                <button className={'filtro-btn' + (filtroActual === 'Todas' ? ' activo-todas' : '')} onClick={() => setFiltroActual('Todas')}>Todas</button>
+                <button className={'filtro-btn' + (filtroActual === 'Perdidas' ? ' activo-perdidas' : '')} onClick={() => setFiltroActual('Perdidas')}>Perdidas</button>
+                <button className={'filtro-btn' + (filtroActual === 'Avistadas' ? ' activo-avistadas' : '')} onClick={() => setFiltroActual('Avistadas')}>Avistadas</button>
+                <button className={'filtro-btn' + (filtroActual === 'Encontradas' ? ' activo-encontradas' : '')} onClick={() => setFiltroActual('Encontradas')}>Encontradas</button>
             </div>
 
             {loading && <p className="reportes-loading">Cargando...</p>}
@@ -259,7 +268,7 @@ function Reportes() {
                 {reportesFiltrados.map(r => (
                     <InfoCard
                         key={r.id}
-                        title={r.descripcion?.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '')}
+                        title={r.descripcion ? r.descripcion.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') : ''}
                         badge={obtenerTextoBadge(r.descripcion, r.mascotaNombre)}
                         badgeColor={obtenerColorBadge(r.descripcion)}
                         meta={buildMeta(r)}
@@ -274,7 +283,6 @@ function Reportes() {
                     onSave={guardar}
                     saveLabel={guardando ? 'Publicando...' : 'Publicar reporte'}
                 >
-                    {/* Selector de Estado */}
                     <div className="reportes-form-group">
                         <label className="reportes-select-label">Estado del Reporte *</label>
                         <select
@@ -282,22 +290,22 @@ function Reportes() {
                             value={form.tipo}
                             onChange={e => setForm({ ...form, tipo: e.target.value })}
                         >
-                            <option value="Perdida">Mascota Perdida ⚠️</option>
-                            <option value="Avistada">Mascota Avistada (Pregunta/Datos) 👀</option>
-                            <option value="Encontrada">Mascota Encontrada / Resguardada ✅</option>
+                            <option value="Perdida">Mascota Perdida</option>
+                            <option value="Avistada">Mascota Avistada</option>
+                            <option value="Encontrada">Mascota Encontrada</option>
                         </select>
                     </div>
 
                     <Input
                         label="Descripción *"
-                        placeholder="¿Qué pasó? Describe la situación..."
+                        placeholder="Qué pasó? Describe la situación..."
                         textarea
                         value={form.descripcion}
                         onChange={e => setForm({ ...form, descripcion: e.target.value })}
                     />
 
                     <Input
-                        label="Fecha y hora"
+                        label="Fecha y hora *"
                         type="datetime-local"
                         value={form.fechaHora}
                         onChange={e => setForm({ ...form, fechaHora: e.target.value })}
@@ -305,15 +313,18 @@ function Reportes() {
 
                     <hr className="reportes-form-divider" />
 
-                    {/* Sección Mascota */}
                     <div className="reportes-mascota-section">
                         <label className="checkbox-nueva-mascota-label">
                             <input
                                 type="checkbox"
                                 checked={form.crearNuevaMascota}
-                                onChange={e => setForm({ ...form, crearNuevaMascota: e.target.checked, mascotaId: '' })}
+                                onChange={e => setForm(prev => ({
+                                    ...prev,
+                                    crearNuevaMascota: e.target.checked,
+                                    mascotaId: ''
+                                }))}
                             />
-                            <span>✨ La mascota no está en la lista (registrar ahora)</span>
+                            <span>La mascota no esta en la lista (registrar ahora)</span>
                         </label>
 
                         {!form.crearNuevaMascota ? (
@@ -327,20 +338,20 @@ function Reportes() {
                                     <option value="">Selecciona una mascota...</option>
                                     {mascotas.map(m => (
                                         <option key={m.id} value={m.id}>
-                                            {m.nombre} {m.especie ? `(${m.especie})` : ''}
+                                            {m.nombre} {m.especie ? '(' + m.especie + ')' : ''}
                                         </option>
                                     ))}
                                 </select>
                             </div>
                         ) : (
                             <div className="nueva-mascota-subform">
-                                <p className="subform-title">📝 Datos de la nueva mascota</p>
+                                <p className="subform-title">Datos de la nueva mascota</p>
                                 <div className="subform-grid">
                                     <Input label="Nombre *" placeholder="Ej: Firulais" value={form.nuevaMascota.nombre} onChange={e => handleMascotaNuevaChange('nombre', e.target.value)} />
                                     <Input label="Especie *" placeholder="Ej: Perro" value={form.nuevaMascota.especie} onChange={e => handleMascotaNuevaChange('especie', e.target.value)} />
                                     <Input label="Raza" placeholder="Ej: Quiltro" value={form.nuevaMascota.raza} onChange={e => handleMascotaNuevaChange('raza', e.target.value)} />
-                                    <Input label="Color / características" placeholder="Ej: Negro completo" value={form.nuevaMascota.color_caracteristica} onChange={e => handleMascotaNuevaChange('color_caracteristica', e.target.value)} />
-                                    <Input label="Tamaño" placeholder="Ej: Grande" value={form.nuevaMascota.tamano} onChange={e => handleMascotaNuevaChange('tamano', e.target.value)} />
+                                    <Input label="Color y caracteristicas" placeholder="Ej: Negro completo" value={form.nuevaMascota.color_caracteristica} onChange={e => handleMascotaNuevaChange('color_caracteristica', e.target.value)} />
+                                    <Input label="Tamano" placeholder="Ej: Grande" value={form.nuevaMascota.tamano} onChange={e => handleMascotaNuevaChange('tamano', e.target.value)} />
                                 </div>
                             </div>
                         )}
@@ -348,9 +359,8 @@ function Reportes() {
 
                     <hr className="reportes-form-divider" />
 
-                    {/* Sección Ubicación */}
                     <div className="reportes-ubicacion-section">
-                        <p className="subform-title">📍 Ubicación del suceso *</p>
+                        <p className="subform-title">Ubicacion del suceso *</p>
                         <label className="reportes-select-label">Comuna de Santiago *</label>
                         <select
                             className="reportes-select"
@@ -371,4 +381,4 @@ function Reportes() {
     )
 }
 
-export default Reportes
+export default Reportes;
