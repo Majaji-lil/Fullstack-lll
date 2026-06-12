@@ -24,7 +24,7 @@ const COMUNAS = [
     { nombre: 'La Reina', latitud: -33.4500, longitud: -70.5333 },
     { nombre: 'Las Condes', latitud: -33.4110, longitud: -70.5680 },
     { nombre: 'Lo Barnechea', latitud: -33.3500, longitud: -70.5167 },
-    { nombre: 'Lo Espejo', latitud: -33.5167, longitud: -70.6833 },
+    { font: 'Lo Espejo', latitud: -33.5167, longitud: -70.6833 },
     { nombre: 'Lo Prado', latitud: -33.4500, longitud: -70.7167 },
     { nombre: 'Macul', latitud: -33.4833, longitud: -70.5833 },
     { nombre: 'Maipú', latitud: -33.5167, longitud: -70.7667 },
@@ -74,8 +74,7 @@ const buildMeta = (r) => {
 
 const formatearFechaParaJava = (fechaStr) => {
     if (!fechaStr) return null
-    if (fechaStr.length === 16) return fechaStr + ':00'
-    return fechaStr
+    return fechaStr.length === 16 ? fechaStr + ':00' : fechaStr
 }
 
 const obtenerColorBadge = (desc) => {
@@ -105,7 +104,11 @@ function Reportes() {
     const cargar = () => {
         setLoading(true)
         Promise.all([axios.get(API_REPORTES), axios.get(API_MASCOTAS)])
-            .then(([rR, rM]) => { setReportes(rR.data); setMascotas(rM.data); setError(null) })
+            .then(([rR, rM]) => {
+                setReportes(rR.data)
+                setMascotas(rM.data)
+                setError(null)
+            })
             .catch(() => setError('No se pudo conectar al servicio de reportes o mascotas'))
             .finally(() => setLoading(false))
     }
@@ -138,30 +141,21 @@ function Reportes() {
         setGuardando(true)
         let mascotaCreadaId = null
 
-        console.group('%c🚀 FLUJO DE CREACIÓN DE REPORTE', 'color: #aa3bff; font-weight: bold; font-size: 12px;');
-        console.log('📝 Estado actual del formulario capturado:', f);
-
         try {
             let mascotaIdFinal = Number(f.mascotaId)
 
             if (f.crearNuevaMascota) {
-                // ✅ Mapeamos las propiedades al formato camelCase que espera Java Spring Boot
                 const payloadMascotaNueva = {
                     nombre: f.nuevaMascota.nombre.trim(),
                     especie: f.nuevaMascota.especie.trim(),
                     raza: f.nuevaMascota.raza.trim() || null,
-                    colorCaracteristica: f.nuevaMascota.color_caracteristica.trim() || null, // 👈 Convertido a camelCase
+                    colorCaracteristica: f.nuevaMascota.color_caracteristica.trim() || null,
                     tamano: f.nuevaMascota.tamano.trim() || null
                 }
 
-                console.log('🐾 [Paso 1/3] Enviando nueva mascota limpia al microservicio...', payloadMascotaNueva);
                 const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, payloadMascotaNueva)
-
                 mascotaIdFinal = mascotaGuardada.id
                 mascotaCreadaId = mascotaGuardada.id
-                console.log('%c✅ Mascota creada con éxito. ID recibido:', 'color: green', mascotaIdFinal);
-            } else {
-                console.log('🐾 [Paso 1/3] Utilizando ID de mascota existente:', mascotaIdFinal);
             }
 
             const payloadReporte = {
@@ -171,14 +165,10 @@ function Reportes() {
                 ubicacion: null
             }
 
-            console.log('📦 [Paso 2/3] Enviando JSON adaptado a la firma del Backend:', payloadReporte);
-
             const { data: reporteCreado } = await axios.post(API_REPORTES, payloadReporte)
-            console.log('%c✅ Reporte Base creado con éxito en Backend:', 'color: green', reporteCreado);
 
             if (reporteCreado && reporteCreado.id) {
                 const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
-
                 const payloadUbicacion = {
                     direccion: 'No especificada',
                     ciudad: 'Santiago',
@@ -188,41 +178,24 @@ function Reportes() {
                     longitud: comunaData ? comunaData.longitud : null,
                 }
 
-                console.log(`📍 [Paso 3/3] Enlazando ubicación definitiva por PUT a /api/reportes/${reporteCreado.id}/ubicacion`, payloadUbicacion);
-                const { data: reporteCompleto } = await axios.put(API_REPORTES + '/' + reporteCreado.id + '/ubicacion', payloadUbicacion)
-                console.log('%c✅ Ubicación asignada correctamente. Proceso completado.', 'color: green', reporteCompleto);
+                await axios.put(`${API_REPORTES}/${reporteCreado.id}/ubicacion`, payloadUbicacion)
             }
 
-            console.groupEnd();
             closeModal()
             cargar()
 
         } catch (err) {
-            console.groupEnd();
-            console.group('%c❌ FALLO EN EL FLUJO DEL REPORTE', 'color: red; font-weight: bold;');
-
-            if (err.response) {
-                console.error('Estatus de respuesta del Backend:', err.response.status);
-                console.error('Cuerpo detallado del error del servidor:', err.response.data);
-            } else {
-                console.error('Error de comunicación / red:', err.message);
-            }
-
-            // 🧹 Mecanismo de Rollback automático en caso de que falle el reporte pero la mascota se haya creado
             if (mascotaCreadaId) {
                 try {
-                    console.warn('🧹 Iniciando rollback: Eliminando mascota huérfana con ID:', mascotaCreadaId);
-                    await axios.delete(API_MASCOTAS + '/' + mascotaCreadaId)
-                    console.log('Se limpió la mascota huérfana para evitar inconsistencias.');
+                    await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`)
                 } catch (delErr) {
                     console.error('Falló la limpieza de la mascota huérfana:', delErr.message)
                 }
             }
-            console.groupEnd();
 
             const msgError = (err.response && err.response.data && err.response.data.message)
                 ? err.response.data.message
-                : 'Error crítico al procesar el flujo del reporte. Revisa los logs en la consola del navegador.'
+                : 'Error crítico al procesar el flujo del reporte.'
             setFormError(msgError)
         } finally {
             setGuardando(false)
@@ -248,10 +221,10 @@ function Reportes() {
             </div>
 
             <div className="reportes-filtros-bar">
-                <button className={'filtro-btn' + (filtroActual === 'Todas' ? ' activo-todas' : '')} onClick={() => setFiltroActual('Todas')}>Todas</button>
-                <button className={'filtro-btn' + (filtroActual === 'Perdidas' ? ' activo-perdidas' : '')} onClick={() => setFiltroActual('Perdidas')}>Perdidas</button>
-                <button className={'filtro-btn' + (filtroActual === 'Avistadas' ? ' activo-avistadas' : '')} onClick={() => setFiltroActual('Avistadas')}>Avistadas</button>
-                <button className={'filtro-btn' + (filtroActual === 'Encontradas' ? ' activo-encontradas' : '')} onClick={() => setFiltroActual('Encontradas')}>Encontradas</button>
+                <button className={`filtro-btn ${filtroActual === 'Todas' ? 'activo-todas' : ''}`} onClick={() => setFiltroActual('Todas')}>Todas</button>
+                <button className={`filtro-btn ${filtroActual === 'Perdidas' ? 'activo-perdidas' : ''}`} onClick={() => setFiltroActual('Perdidas')}>Perdidas</button>
+                <button className={`filtro-btn ${filtroActual === 'Avistadas' ? 'activo-avistadas' : ''}`} onClick={() => setFiltroActual('Avistadas')}>Avistadas</button>
+                <button className={`filtro-btn ${filtroActual === 'Encontradas' ? 'activo-encontradas' : ''}`} onClick={() => setFiltroActual('Encontradas')}>Encontradas</button>
             </div>
 
             {loading && <p className="reportes-loading">Cargando...</p>}
