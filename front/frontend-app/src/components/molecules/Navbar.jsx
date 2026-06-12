@@ -1,7 +1,7 @@
-// src/molecules/Navbar/Navbar.jsx
-import { Link, useLocation } from 'react-router-dom'
+// src/components/molecules/Navbar.jsx
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import Button from '../../components/atoms/Button'
+import Button from '../atoms/Button'
 import '../../styles/molecules/Navbar.css'
 
 const PUBLIC_LINKS = [
@@ -10,6 +10,7 @@ const PUBLIC_LINKS = [
     { to: '/reportes', label: 'Reportes' },
     { to: '/mapa', label: 'Mapa' },
 ]
+
 const ADMIN_LINKS = [
     ...PUBLIC_LINKS,
     { to: '/usuarios', label: 'Usuarios' },
@@ -17,11 +18,21 @@ const ADMIN_LINKS = [
 
 function Navbar() {
     const { pathname } = useLocation()
-    const { isAdmin, logout } = useAuth()
+    const navigate = useNavigate()
+    const { isAdmin, isLoggedIn, usuario, logout } = useAuth()
+
     const links = isAdmin ? ADMIN_LINKS : PUBLIC_LINKS
+
+    const handleLogout = () => { logout(); navigate('/') }
+
+    // Iniciales para el avatar
+    const initials = usuario?.nombres
+        ? usuario.nombres.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+        : '?'
 
     return (
         <nav className="navbar">
+
             <Link to="/" className="navbar__brand">
                 <div className="navbar__logo">🐾</div>
                 <span className="navbar__title">Sanos y Salvos</span>
@@ -39,16 +50,44 @@ function Navbar() {
 
             <div className="navbar__spacer" />
 
-            {isAdmin ? (
-                <>
-                    <span className="navbar__admin-badge">Admin</span>
-                    <Button variant="ghost" size="sm" onClick={logout}>Cerrar sesión</Button>
-                </>
-            ) : (
-                <Link to="/login">
-                    <Button variant="outline" size="sm">Acceso admin</Button>
-                </Link>
+            {/* Sin sesión */}
+            {!isLoggedIn && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <Link to="/login">
+                        <Button variant="ghost" size="sm">Iniciar sesión</Button>
+                    </Link>
+                    <Link to="/login">
+                        <Button variant="primary" size="sm">Registrarse</Button>
+                    </Link>
+                </div>
             )}
+
+            {/* Usuario logueado (no admin) */}
+            {isLoggedIn && !isAdmin && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                        width: 30, height: 30, borderRadius: '50%',
+                        background: '#dcfce7', color: '#1b4332',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
+                    }}>
+                        {initials}
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: '#111827', fontFamily: 'system-ui' }}>
+                        {usuario?.nombres?.split(' ')[0]}
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={handleLogout}>Salir</Button>
+                </div>
+            )}
+
+            {/* Admin */}
+            {isAdmin && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="navbar__admin-badge">Admin</span>
+                    <Button variant="ghost" size="sm" onClick={handleLogout}>Cerrar sesión</Button>
+                </div>
+            )}
+
         </nav>
     )
 }

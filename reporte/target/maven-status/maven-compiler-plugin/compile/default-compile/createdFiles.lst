@@ -4,8 +4,10 @@ Reporte\reporte\ReporteApplication.class
 Reporte\reporte\service\MascotaService.class
 Reporte\reporte\model\MascotaDTO.class
 Reporte\reporte\repository\ReporteRepository.class
-Reporte\reporte\model\UbicacionModel.class
 Reporte\reporte\service\ReporteService.class
 Reporte\reporte\service\UbicacionService.class
+Reporte\reporte\service\UsuarioService.class
 Reporte\reporte\model\ReporteModel.class
 Reporte\reporte\repository\UbicacionRepository.class
+Reporte\reporte\model\UsuarioDTO.class
+Reporte\reporte\model\UbicacionModel.class

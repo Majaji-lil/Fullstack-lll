@@ -1,0 +1,13 @@
+/* src/styles/pages/Mascotas.css */
+.mascotas-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.mascotas-loading {
+    text-align: center;
+    padding: 3rem;
+    color: #9ca3af;
+    font-family: system-ui;
+}
