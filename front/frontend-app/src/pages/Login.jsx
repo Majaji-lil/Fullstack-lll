@@ -4,6 +4,11 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import '../styles/pages/Login.css'
 
+const validarFormatoCorreo = (email) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+};
+
 function Campo({ label, type = 'text', value, onChange, placeholder }) {
   return (
     <div className="login-field">
@@ -21,9 +26,16 @@ function FormLogin({ onSwitch }) {
   const navigate = useNavigate()
 
   const handleSubmit = async () => {
+    setError('')
     if (!correo || !password) { setError('Completa todos los campos'); return }
+    
+    if (!validarFormatoCorreo(correo.trim())) { 
+      setError('Por favor, ingresa un correo electrónico válido'); 
+      return 
+    }
+
     setCargando(true)
-    const ok = await login(correo, password)
+    const ok = await login(correo.trim(), password)
     setCargando(false)
     if (ok) navigate('/')
   }
@@ -61,11 +73,17 @@ function FormRegistro({ onSwitch }) {
   const handleSubmit = async () => {
     setError('')
     if (!nombres || !correo || !password) { setError('Completa todos los campos'); return }
+    
+    if (!validarFormatoCorreo(correo.trim())) { 
+      setError('El correo debe incluir un @ y un dominio válido (ej: usuario@correo.com)'); 
+      return 
+    }
+    
     if (password !== confirm) { setError('Las contraseñas no coinciden'); return }
     if (password.length < 6) { setError('Mínimo 6 caracteres'); return }
 
     setCargando(true)
-    const ok = await register(nombres, correo, password)
+    const ok = await register(nombres.trim(), correo.trim(), password)
     setCargando(false)
     if (ok) navigate('/')
   }
@@ -99,7 +117,6 @@ function Login() {
   const { pathname } = useLocation()
   const { setError } = useAuth()
 
-  // Si la URL es /registro, abre ese tab directamente — fix del bug
   const [tab, setTab] = useState(pathname === '/registro' ? 'registro' : 'login')
 
   const switchTab = (t) => { setError(''); setTab(t) }
