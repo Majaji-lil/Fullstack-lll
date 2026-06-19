@@ -11,3 +11,72 @@
     color: #9ca3af;
     font-family: system-ui;
 }
+
+.mascotas-filtros-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.m-filtro-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    background-color: #ffffff;
+    color: #1f2937;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.m-filtro-btn:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.m-filtro-btn.m-btn-todas.activo {
+    background-color: #4f46e5;
+    color: #ffffff;
+    border-color: #4f46e5;
+}
+
+.m-filtro-btn.m-btn-perdidas.activo {
+    background-color: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+}
+
+.m-filtro-btn.m-btn-avistadas.activo {
+    background-color: #f59e0b;
+    color: #ffffff;
+    border-color: #f59e0b;
+}
+
+.m-filtro-btn.m-btn-encontradas.activo {
+    background-color: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+
+.mascotas-form-group {
+    margin-bottom: 15px;
+}
+
+.mascotas-select-label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.mascotas-select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+}

@@ -1,0 +1,32 @@
+/* src/styles/pages/NotFound.css */
+.notfound-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.notfound-icon {
+  font-size: 72px;
+  margin-bottom: 10px;
+}
+
+.notfound-title {
+  font-size: 32px;
+  color: #1f2937;
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-family: Georgia, serif;
+}
+
+.notfound-desc {
+  font-size: 16px;
+  color: #6b7280;
+  max-width: 400px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+  font-family: system-ui, sans-serif;
+}

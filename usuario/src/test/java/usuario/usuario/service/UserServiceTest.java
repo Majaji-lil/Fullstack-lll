@@ -37,7 +37,6 @@ class UserServiceTest {
         assertNotNull(usuarioGuardado.getId(), "El ID no debería ser null tras guardar");
         assertEquals("test@correo.com", usuarioGuardado.getCorreo());
 
-        // Comprobamos que podemos recuperarlo por ID
         UserModel usuarioEncontrado = userService.encontrarPorId(usuarioGuardado.getId());
         assertNotNull(usuarioEncontrado);
         assertEquals("Juan Perez", usuarioEncontrado.getNombres());

@@ -19,7 +19,9 @@ public class ReporteService {
     private final MascotaService mascotaService;
     private final UbicacionService ubicacionService;
 
-    public ReporteService(ReporteRepository repository, MascotaService mascotaService, UbicacionService ubicacionService, UsuarioService usuarioService) {
+    public ReporteService(ReporteRepository repository,
+            MascotaService mascotaService,
+            UbicacionService ubicacionService) {
         this.repository = repository;
         this.mascotaService = mascotaService;
         this.ubicacionService = ubicacionService;
@@ -35,6 +37,7 @@ public class ReporteService {
     }
 
     public ReporteModel guardar(ReporteRequest request) {
+        System.out.println("VERSION NUEVA DEL SERVICIO");
         if (request == null || request.getMascotaId() == null) {
             return null;
         }
@@ -68,7 +71,39 @@ public class ReporteService {
 
         return repository.save(reporte);
 
+    }
 
+    // 🌟 NUEVO MÉTODO: Soluciona el error de compilación del Controller mapeando la
+    // actualización
+    public Optional<ReporteModel> editar(Long id, ReporteRequest request) {
+        return repository.findById(id).map(reporteExistente -> {
+            reporteExistente.setDescripcion(request.getDescripcion());
+
+            if (request.getFechaHora() != null) {
+                reporteExistente.setFechaHora(request.getFechaHora());
+            }
+
+            // Sincronizar datos si cambia la mascota asociada
+            if (request.getMascotaId() != null) {
+                var mascota = mascotaService.obtenerMascotaPorId(request.getMascotaId());
+                if (mascota != null) {
+                    reporteExistente.setMascotaId(mascota.getId());
+                    reporteExistente.setMascotaNombre(mascota.getNombre());
+                }
+            }
+
+            return repository.save(reporteExistente);
+        });
+    }
+
+    // 🌟 NUEVO MÉTODO: Modificado para retornar boolean y encajar con la respuesta
+    // HTTP de tu Controller
+    public boolean eliminar(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     public Optional<ReporteModel> asignarUbicacion(Long reporteId, UbicacionModel ubicacion) {
@@ -83,4 +118,5 @@ public class ReporteService {
         repository.save(reporte);
         return Optional.of(reporte);
     }
+
 }

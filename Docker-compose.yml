@@ -17,7 +17,7 @@ services:
     networks:
       - microservicios-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot1234"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot1234" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,6 +34,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanosysalvos
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root1234
+      SERVER_PORT: 8081
     depends_on:
       mysql:
         condition: service_healthy
@@ -52,6 +53,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root1234
+      SERVER_PORT: 8082
     depends_on:
       mysql:
         condition: service_healthy
@@ -70,6 +72,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanosysalvos
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root1234
+      SERVER_PORT: 8083
       MASCOTA_SERVICE_URL: http://mascotas-service:8081
       USUARIO_SERVICE_URL: http://usuarios-service:8082
     depends_on:
@@ -87,13 +90,17 @@ services:
     ports:
       - "8090:8090"
     environment:
+      SERVER_PORT: 8090
       MASCOTAS_URL: http://mascotas-service:8081
       USUARIOS_URL: http://usuarios-service:8082
       REPORTES_URL: http://reporte-service:8083
     depends_on:
-      - mascotas-service
-      - usuarios-service
-      - reporte-service
+      mascotas-service:
+        condition: service_started
+      usuarios-service:
+        condition: service_started
+      reporte-service:
+        condition: service_started
     networks:
       - microservicios-net
 

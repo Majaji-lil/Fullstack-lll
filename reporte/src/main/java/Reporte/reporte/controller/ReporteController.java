@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,10 +49,27 @@ public class ReporteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(reporte);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ReporteModel> editar(@PathVariable Long id, @RequestBody ReporteRequest request) {
+        return service.editar(id, request) 
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PutMapping("/{id}/ubicacion")
     public ResponseEntity<ReporteModel> asignarUbicacion(@PathVariable Long id, @RequestBody UbicacionModel ubicacion) {
         return service.asignarUbicacion(id, ubicacion)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        boolean eliminado = service.eliminar(id);
+        if (eliminado) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+    
 }
