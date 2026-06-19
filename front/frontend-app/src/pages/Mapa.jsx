@@ -1,54 +1,95 @@
-import { MapContainer, TileLayer } from "react-leaflet";
-import HeatmapLayer from "../components/HeatmapLayer";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup
+} from "react-leaflet";
+import HeatmapLayer from "react-leaflet-heatmap-layer";
+import { API_REPORTES } from "../api/urls";
 
-export default function Mapa() {
-  const position = [-33.43778, -70.65028];
+const Mapa = () => {
+  const [reportes, setReportes] = useState([]);
 
-  // Datos de ejemplo para el mapa de calor
-  // Formato: [lat, lng, intensidad (0-1)]
-  const addressPoints = [
-    // Centro de Santiago
-    [-33.43778, -70.65028, 0.9],
-    [-33.43650, -70.65100, 0.8],
-    [-33.43900, -70.65000, 0.7],
-    [-33.43500, -70.65200, 0.85],
-    [-33.44000, -70.64900, 0.75],
-    
-    // Puntos adicionales alrededor
-    [-33.42778, -70.66028, 0.6],
-    [-33.44778, -70.64028, 0.65],
-    [-33.43778, -70.63028, 0.55],
-    [-33.43778, -70.66528, 0.7],
-    [-33.42278, -70.65028, 0.5],
-  ];
+  useEffect(() => {
+    cargarReportes();
+  }, []);
+
+  const cargarReportes = async () => {
+    try {
+      const response = await axios.get(API_REPORTES);
+      setReportes(response.data);
+    } catch (error) {
+      console.error("Error cargando reportes:", error);
+    }
+  };
+
+  const puntosCalor = reportes
+    .filter(
+      (r) =>
+        r.latitud !== null &&
+        r.longitud !== null
+    )
+    .map((r) => [
+      Number(r.latitud),
+      Number(r.longitud),
+      1
+    ]);
 
   return (
-    <MapContainer 
-      center={position} 
-      zoom={13} 
-      style={{ height: "500px", width: "100%" }}
+    <MapContainer
+      center={[-33.4489, -70.6693]}
+      zoom={13}
+      style={{ height: "100vh", width: "100%" }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution='&copy; OpenStreetMap contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
       <HeatmapLayer
-        data={addressPoints}
-        latitudeExtractor={(m) => m[0]}
+        fitBoundsOnLoad
+        fitBoundsOnUpdate
+        points={puntosCalor}
         longitudeExtractor={(m) => m[1]}
-        intensityExtractor={(m) => parseFloat(m[2])}
-        radius={30}
-        blur={15}
-        max={1.0}
-        gradient={{
-          0.0: "#0000ff",
-          0.25: "#00ff00",
-          0.5: "#ffff00",
-          0.75: "#ff7f00",
-          1.0: "#ff0000",
-        }}
+        latitudeExtractor={(m) => m[0]}
+        intensityExtractor={(m) => m[2]}
       />
+
+      {reportes.map((reporte) => (
+        <Marker
+          key={reporte.id}
+          position={[
+            Number(reporte.latitud),
+            Number(reporte.longitud)
+          ]}
+        >
+          <Popup>
+            <div>
+              <h4>{reporte.mascotaNombre}</h4>
+
+              <p>
+                <strong>Descripción:</strong>
+                <br />
+                {reporte.descripcion}
+              </p>
+
+              <p>
+                <strong>Estado:</strong>{" "}
+                {reporte.estado}
+              </p>
+
+              <p>
+                <strong>Fecha:</strong>{" "}
+                {reporte.fecha}
+              </p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   );
-}
+};
+
+export default Mapa;
