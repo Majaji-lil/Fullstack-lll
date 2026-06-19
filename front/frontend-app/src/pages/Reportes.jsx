@@ -32,7 +32,7 @@ const COMUNAS = [
     { nombre: 'Ñuñoa', latitud: -33.4569, longitud: -70.5990 },
     { nombre: 'Pedro Aguirre Cerda', latitud: -33.5000, longitud: -70.6833 },
     { nombre: 'Peñalolén', latitud: -33.4833, longitud: -70.5333 },
-    { ambiguous: false, nombre: 'Providencia', latitud: -33.4326, longitud: -70.6189 },
+    { nombre: 'Providencia', latitud: -33.4326, longitud: -70.6189 },
     { nombre: 'Pudahuel', latitud: -33.4333, longitud: -70.7667 },
     { nombre: 'Quilicura', latitud: -33.3667, longitud: -70.7333 },
     { nombre: 'Quinta Normal', latitud: -33.4333, longitud: -70.7000 },
@@ -69,7 +69,7 @@ const buildMeta = (r) => {
     const partes = []
     if (r.mascotaNombre) partes.push('🐾 ' + r.mascotaNombre)
     if (r.fechaHora) partes.push('📅 ' + formatFecha(r.fechaHora))
-    if (r.ubicacion && r.ubicacion.departamento) partes.push('📍 ' + r.ubicacion.departamento)
+    if (r.ubicacion && r.ubicacion.comuna) partes.push('📍 ' + r.ubicacion.comuna)
     return partes.join('  ·  ')
 }
 
@@ -159,7 +159,7 @@ function Reportes() {
             mascotaId: reporte.mascotaId ? String(reporte.mascotaId) : '',
             crearNuevaMascota: false,
             nuevaMascota: { nombre: '', especie: '', raza: '', colorCaracteristica: '', tamano: '' },
-            comuna: reporte.ubicacion?.departamento || '',
+            comuna: reporte.ubicacion?.comuna || '',
             tipo: tipoDetectado,
         })
         setModal(true)
@@ -234,7 +234,7 @@ function Reportes() {
                     id: editando?.ubicacion?.id || null,
                     direccion: editando?.ubicacion?.direccion || 'No especificada',
                     ciudad: 'Santiago',
-                    departamento: f.comuna,
+                    comuna: f.comuna,
                     pais: 'Chile',
                     latitud: comunaData ? comunaData.latitud : null,
                     longitud: comunaData ? comunaData.longitud : null,
