@@ -7,7 +7,7 @@ CREATE DATABASE IF NOT EXISTS reportes;
 
 GRANT ALL PRIVILEGES ON sanosysalvos.* TO 'root'@'%';
 GRANT ALL PRIVILEGES ON user.* TO 'root'@'%';
-GRANT ALL PRIVILEGES ON reportes.* 'root'@'%';
+GRANT ALL PRIVILEGES ON reportes.* TO 'root'@'%';
 FLUSH PRIVILEGES;
 
 USE user;

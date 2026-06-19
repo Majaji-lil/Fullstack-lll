@@ -21,7 +21,8 @@ public class ReporteService {
 
     public ReporteService(ReporteRepository repository,
             MascotaService mascotaService,
-            UbicacionService ubicacionService) {
+            UbicacionService ubicacionService,
+            UsuarioService usuarioService) {
         this.repository = repository;
         this.mascotaService = mascotaService;
         this.ubicacionService = ubicacionService;
@@ -73,8 +74,6 @@ public class ReporteService {
 
     }
 
-    // 🌟 NUEVO MÉTODO: Soluciona el error de compilación del Controller mapeando la
-    // actualización
     public Optional<ReporteModel> editar(Long id, ReporteRequest request) {
         return repository.findById(id).map(reporteExistente -> {
             reporteExistente.setDescripcion(request.getDescripcion());
@@ -96,8 +95,6 @@ public class ReporteService {
         });
     }
 
-    // 🌟 NUEVO MÉTODO: Modificado para retornar boolean y encajar con la respuesta
-    // HTTP de tu Controller
     public boolean eliminar(Long id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);
