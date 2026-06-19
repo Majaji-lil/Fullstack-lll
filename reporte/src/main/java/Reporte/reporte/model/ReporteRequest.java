@@ -8,7 +8,8 @@ public class ReporteRequest {
     private String descripcion;
     private LocalDateTime fechaHora;
     private Long mascotaId;
-    private Long ubicacionId;
+    private Double longitud;
+    private Double latitud;
 
     public ReporteRequest() {
     }
@@ -45,11 +46,19 @@ public class ReporteRequest {
         this.mascotaId = mascotaId;
     }
 
-    public Long getUbicacionId() {
-        return ubicacionId;
+    public Double getLongitud() {
+        return longitud;
     }
 
-    public void setUbicacionId(Long ubicacionId) {
-        this.ubicacionId = ubicacionId;
+    public void setLongitud(Double longitud){
+        this.longitud = longitud;
+    }
+
+    public Double getLatitud() {
+        return latitud;
+    }
+
+    public void setLatitud(Double latitud){
+        this.latitud = latitud;
     }
 }
