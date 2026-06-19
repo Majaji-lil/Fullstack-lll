@@ -42,11 +42,11 @@ public class ReporteModel {
 private Long mascotaId;
 
 @Column(nullable = false)
-private String mascotaNombre; // 👈 ¡Obligatorio en base de datos!
+private String mascotaNombre; 
 
 @OneToOne(cascade = CascadeType.ALL)
 @JoinColumn(name = "ubicacion_id", nullable = true)
-private UbicacionModel ubicacion; // 👈 ¡Es un Objeto Completo, NO un Long!
+private UbicacionModel ubicacion; 
 
     public ReporteModel(String descripcion, LocalDateTime fechaHora, Long mascotaId, String mascotaNombre) {
         this.descripcion = descripcion;
