@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: usuario.usuario.service.UserServiceTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.678 s -- in usuario.usuario.service.UserServiceTest
