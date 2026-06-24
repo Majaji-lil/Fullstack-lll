@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: Sanos_y_salvos.Fullstack_lll.service.MascotaServiceTest
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.505 s -- in Sanos_y_salvos.Fullstack_lll.service.MascotaServiceTest
