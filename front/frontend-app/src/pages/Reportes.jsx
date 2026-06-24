@@ -197,6 +197,7 @@ function Reportes() {
         try {
             let mascotaIdFinal = f.mascotaId ? Number(f.mascotaId) : (editando ? editando.mascotaId : null)
 
+            // 1. Si es una mascota nueva, la creamos primero
             if (!editando && f.crearNuevaMascota) {
                 const payloadMascotaNueva = {
                     nombre: f.nuevaMascota.nombre.trim(),
@@ -211,37 +212,26 @@ function Reportes() {
                 mascotaCreadaId = mascotaGuardada.id
             }
 
+            // 2. Buscamos las coordenadas de la comuna seleccionada
+            const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
+
+            // 3. Armamos el reporte incluyendo la ubicación directamente aquí (Como pide DEV)
             const payloadReporte = {
                 descripcion: '[' + f.tipo + '] ' + f.descripcion.trim(),
                 fechaHora: formatearFechaParaJava(f.fechaHora),
                 mascotaId: mascotaIdFinal,
-                ubicacion: editando ? editando.ubicacion : null
+                longitud: comunaData ? comunaData.longitud : null,
+                latitud: comunaData ? comunaData.latitud : null
             }
 
-            let reporteId = null
-
+            // 4. Enviamos una sola petición limpia
             if (editando) {
                 await axios.put(`${API_REPORTES}/${editando.id}`, payloadReporte)
-                reporteId = editando.id
             } else {
-                const { data: reporteCreado } = await axios.post(API_REPORTES, payloadReporte)
-                reporteId = reporteCreado.id
+                await axios.post(API_REPORTES, payloadReporte)
             }
 
-            if (reporteId) {
-                const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
-                const payloadUbicacion = {
-                    id: editando?.ubicacion?.id || null,
-                    //direccion: editando?.ubicacion?.direccion || 'No especificada',
-                    //  ciudad: 'Santiago',
-                    comuna: f.comuna,
-                    //pais: 'Chile',
-                    latitud: comunaData ? comunaData.latitud : null,
-                    longitud: comunaData ? comunaData.longitud : null,
-                }
-
-                await axios.put(`${API_REPORTES}/${reporteId}/ubicacion`, payloadUbicacion)
-            }
+            // Eliminamos el antiguo bloque de "reporteId /ubicacion" que hacía fallar todo
 
             closeModal()
             cargar()

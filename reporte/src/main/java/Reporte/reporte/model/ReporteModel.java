@@ -24,7 +24,7 @@ public class ReporteModel {
     private Long id;
 
     @Column(nullable = true)
-    private Integer usuarioId;
+    private Long usuarioId;
 
     @Column(nullable = true)
     private String usuarioNombre;
@@ -36,10 +36,10 @@ public class ReporteModel {
     private LocalDateTime fechaHora;
 
     @Column(nullable = false)
-private Long mascotaId;
+    private Long mascotaId;
 
-@Column(nullable = false)
-private String mascotaNombre; 
+    @Column(nullable = false)
+    private String mascotaNombre;
 
     @Column(nullable = false)
     private Double longitud;

@@ -6,7 +6,7 @@ import {
   Marker,
   Popup
 } from "react-leaflet";
-import HeatmapLayer from "react-leaflet-heatmap-layer";
+//import HeatmapLayer from "react-leaflet-heatmap-layer";
 import { API_REPORTES } from "../api/urls";
 
 const Mapa = () => {
@@ -48,14 +48,14 @@ const Mapa = () => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <HeatmapLayer
+      {/* <HeatmapLayer
         fitBoundsOnLoad
         fitBoundsOnUpdate
         points={puntosCalor}
         longitudeExtractor={(m) => m[1]}
         latitudeExtractor={(m) => m[0]}
         intensityExtractor={(m) => m[2]}
-      />
+      /> */}
 
       {reportes.map((reporte) => (
         <Marker

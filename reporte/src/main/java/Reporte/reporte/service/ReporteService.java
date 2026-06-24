@@ -65,5 +65,26 @@ public class ReporteService {
         return repository.save(reporte);
     }
 
-    
+    public Optional<ReporteModel> editar(Long id, ReporteRequest request) {
+        return repository.findById(id).map(reporte -> {
+            reporte.setDescripcion(request.getDescripcion());
+            reporte.setLongitud(request.getLongitud());
+            reporte.setLatitud(request.getLatitud());
+
+            if (request.getFechaHora() != null) {
+                reporte.setFechaHora(request.getFechaHora());
+            }
+
+            return repository.save(reporte);
+        });
+    }
+
+    public boolean eliminar(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
 }

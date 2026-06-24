@@ -21,7 +21,7 @@ public class UbicacionModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "comuna",)
+    @Column(name = "comuna")
     private String comuna;
 
     @Column(nullable = false)
