@@ -50,9 +50,7 @@ function Profile() {
         try {
             setCargando(true)
 
-            // IMPORTANTE: el backend tiene @JsonProperty(WRITE_ONLY) en password.
-            // Si el usuario no quiere cambiar la contraseña, NO la enviamos en el PUT
-            // para evitar pisar la contraseña actual con undefined/null.
+
             const datosActualizados = {
                 nombres,
                 correo,
@@ -64,13 +62,11 @@ function Profile() {
                 datosActualizados
             )
 
-            // Actualiza localStorage y el contexto
             const usuarioActualizado = { ...usuario, nombres, correo }
             localStorage.setItem('usuario', JSON.stringify(usuarioActualizado))
             setUsuario(usuarioActualizado)
 
-            // El backend devuelve el usuario sin password (WRITE_ONLY),
-            // así que usamos la versión local para no perder el id
+
             setMensaje({ texto: '¡Perfil actualizado con éxito!', tipo: 'exito' })
             setPassword('')
             setConfirmPassword('')

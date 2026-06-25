@@ -7,7 +7,6 @@ import L from 'leaflet'
 import 'leaflet.heat'
 import { API_REPORTES } from '../api/urls'
 
-// Extrae el tipo de reporte desde el prefijo de la descripción
 const obtenerTipo = (desc) => {
   if (!desc) return 'Reporte'
   if (desc.startsWith('[Perdida]')) return 'Perdida'
@@ -36,7 +35,6 @@ const colorPorTipo = {
   Reporte: '#6b7280',
 }
 
-// Componente interno que dibuja el heatmap sobre el mapa ya montado
 function HeatmapLayer({ puntos }) {
   const map = useMap()
 
@@ -79,12 +77,10 @@ function Mapa() {
     }
   }
 
-  // Solo reportes con coordenadas válidas
   const reportesConCoords = reportes.filter(
     r => r.latitud != null && r.longitud != null
   )
 
-  // Puntos para el heatmap: [lat, lng, intensidad]
   const puntosCalor = reportesConCoords.map(r => [
     Number(r.latitud),
     Number(r.longitud),
@@ -93,7 +89,7 @@ function Mapa() {
 
   const centro = reportesConCoords.length
     ? [Number(reportesConCoords[0].latitud), Number(reportesConCoords[0].longitud)]
-    : [-33.4489, -70.6693] // Santiago, Chile por defecto
+    : [-33.4489, -70.6693]
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>

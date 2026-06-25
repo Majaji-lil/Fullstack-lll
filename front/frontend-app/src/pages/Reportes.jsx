@@ -187,7 +187,6 @@ function Reportes() {
     const handleMascotaNuevaChange = (campo, valor) =>
         setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
 
-    // Solo el admin o el autor del reporte pueden editarlo/eliminarlo
     const puedeEditar = (reporte) => {
         if (!usuario) return false
         if (isAdmin) return true
@@ -231,17 +230,14 @@ function Reportes() {
                 mascotaCreadaId = mascotaGuardada.id
             }
 
-            // 2. Buscamos las coordenadas de la comuna seleccionada
             const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
 
-            // 3. Armamos el reporte — incluye usuarioId para vincular el autor
             const payloadReporte = {
                 descripcion: '[' + f.tipo + '] ' + f.descripcion.trim(),
                 fechaHora: formatearFechaParaJava(f.fechaHora),
                 mascotaId: mascotaIdFinal,
                 longitud: comunaData ? comunaData.longitud : null,
                 latitud: comunaData ? comunaData.latitud : null,
-                // ✅ Vincula el reporte al usuario logueado (admin tiene id 0, se omite)
                 usuarioId: (usuario && usuario.id) ? usuario.id : null,
             }
 
