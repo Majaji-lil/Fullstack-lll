@@ -1,5 +1,6 @@
 package Sanos_y_salvos.Fullstack_lll.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,6 +25,7 @@ public class MascotaModel {
     private String nombre;
     private String especie;
     private String raza;
-    private String color_caracteristica;
+    @Column(name = "color_caracteristica")
+    private String colorCaracteristica;
     private String tamano;
 }

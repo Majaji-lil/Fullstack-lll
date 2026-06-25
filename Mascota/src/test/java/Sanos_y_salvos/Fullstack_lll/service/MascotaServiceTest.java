@@ -1,6 +1,5 @@
 package Sanos_y_salvos.Fullstack_lll.service;
 
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +35,7 @@ public class MascotaServiceTest {
         mascota.setNombre("Firulais");
         mascota.setEspecie("Perro");
         mascota.setRaza("Labrador");
-        mascota.setColor_caracteristica("Amarillo");
+        mascota.setColorCaracteristica("Amarillo");
         mascota.setTamano("Grande");
 
         MascotaModel mascotaGuardada = new MascotaModel();
@@ -44,7 +43,7 @@ public class MascotaServiceTest {
         mascotaGuardada.setNombre("Firulais");
         mascotaGuardada.setEspecie("Perro");
         mascotaGuardada.setRaza("Labrador");
-        mascotaGuardada.setColor_caracteristica("Amarillo");
+        mascotaGuardada.setColorCaracteristica("Amarillo");
         mascotaGuardada.setTamano("Grande");
 
         when(repository.save(mascota)).thenReturn(mascotaGuardada);
@@ -58,13 +57,13 @@ public class MascotaServiceTest {
         assertEquals("Firulais", resultado.getNombre());
         assertEquals("Perro", resultado.getEspecie());
         assertEquals("Labrador", resultado.getRaza());
-        assertEquals("Amarillo", resultado.getColor_caracteristica());
+        assertEquals("Amarillo", resultado.getColorCaracteristica());
         assertEquals("Grande", resultado.getTamano());
     }
 
     @Test
     public void testListarMascotas() {
-        //Arrange 
+        // Arrange
         MascotaModel mascota1 = new MascotaModel();
         mascota1.setId(1L);
         mascota1.setNombre("Firulais");
@@ -75,10 +74,10 @@ public class MascotaServiceTest {
 
         when(repository.findAll()).thenReturn(Arrays.asList(mascota1, mascota2));
 
-        //Act
+        // Act
         List<MascotaModel> resultado = service.listar();
 
-        //Assert
+        // Assert
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
         assertEquals("Firulais", resultado.get(0).getNombre());
@@ -87,17 +86,17 @@ public class MascotaServiceTest {
 
     @Test
     public void testEncontrarPorIdExistente() {
-        //Arrange
+        // Arrange
         MascotaModel mascota = new MascotaModel();
         mascota.setId(1L);
         mascota.setNombre("Firulais");
 
         when(repository.findById(1L)).thenReturn(Optional.of(mascota));
 
-        //Act
+        // Act
         MascotaModel resultado = service.encontrarporid(1L);
 
-        //Assert
+        // Assert
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
         assertEquals("Firulais", resultado.getNombre());
@@ -105,69 +104,69 @@ public class MascotaServiceTest {
 
     @Test
     public void testEncontrarPorIdNoExistente() {
-        //Arrange
+        // Arrange
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        //Act
+        // Act
         MascotaModel resultado = service.encontrarporid(99L);
 
-        //Assert
+        // Assert
         assertNull(resultado);
     }
 
     @Test
     public void testActualizarMascotaExistente() {
-        //Arrange
+        // Arrange
         MascotaModel mascotaExistente = new MascotaModel();
         mascotaExistente.setId(1L);
         mascotaExistente.setNombre("Firulais");
         mascotaExistente.setEspecie("Perro");
         mascotaExistente.setRaza("Labrador");
-        mascotaExistente.setColor_caracteristica("Amarillo");
+        mascotaExistente.setColorCaracteristica("Amarillo");
         mascotaExistente.setTamano("Grande");
 
         MascotaModel datosNuevos = new MascotaModel();
         datosNuevos.setNombre("Firulais Actualizado");
         datosNuevos.setEspecie("Perro");
         datosNuevos.setRaza("Poodle");
-        datosNuevos.setColor_caracteristica("Blanco");
+        datosNuevos.setColorCaracteristica("Blanco");
         datosNuevos.setTamano("Pequeño");
 
         when(repository.findById(1L)).thenReturn(Optional.of(mascotaExistente));
         when(repository.save(mascotaExistente)).thenReturn(mascotaExistente);
 
-        //Act
+        // Act
         MascotaModel resultado = service.actualizar(1L, datosNuevos);
 
-        //Assert
+        // Assert
         assertNotNull(resultado);
         assertEquals("Firulais Actualizado", resultado.getNombre());
         assertEquals("Poodle", resultado.getRaza());
-        assertEquals("Blanco", resultado.getColor_caracteristica());
+        assertEquals("Blanco", resultado.getColorCaracteristica());
         assertEquals("Pequeño", resultado.getTamano());
     }
 
     @Test
     public void testActualizarMascotaNoExistente() {
-        //Arrange
+        // Arrange
         MascotaModel datosNuevos = new MascotaModel();
         datosNuevos.setNombre("No existe");
 
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        //Act
+        // Act
         MascotaModel resultado = service.actualizar(99L, datosNuevos);
-        
-        //Assert
+
+        // Assert
         assertNull(resultado);
     }
 
     @Test
     public void testEliminarMascota() {
-        //Act
+        // Act
         service.eliminar(1L);
 
-        //Assert
+        // Assert
         verify(repository, times(1)).deleteById(1L);
     }
 }
