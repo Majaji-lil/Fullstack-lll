@@ -54,6 +54,7 @@ function HeatmapLayer({ puntos }) {
   return null
 }
 
+
 function Mapa() {
   const [reportes, setReportes] = useState([])
   const [loading, setLoading] = useState(true)
