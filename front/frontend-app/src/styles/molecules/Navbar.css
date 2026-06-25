@@ -21,8 +21,14 @@
 }
 
 .navbar__logo {
-  background: #1b4332;
-  color: #fff;
+  width: 33px;
+  height: 33px;
+  border-radius: 8px;
+  background: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
 }
 
 .navbar__title {
@@ -58,6 +64,7 @@
   flex: 1;
 }
 
+/* Badge admin */
 .navbar__admin-badge {
   font-size: 12px;
   background: #fef9c3;
@@ -66,5 +73,54 @@
   border-radius: 99px;
   font-weight: 600;
   font-family: system-ui;
-  margin-right: 4px;
+}
+
+/* Zona de usuario logueado */
+.navbar__user-zone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Link clickeable que lleva al perfil */
+.navbar__user-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.navbar__user-link:hover {
+  background: #f0fdf4;
+}
+
+.navbar__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: system-ui;
+  flex-shrink: 0;
+}
+
+.navbar__username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  font-family: system-ui;
+}
+
+.navbar__auth-zone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

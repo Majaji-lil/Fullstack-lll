@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import Sanos_y_salvos.Fullstack_lll.model.MascotaModel;
 import Sanos_y_salvos.Fullstack_lll.service.MascotaService;
 
-
-
 @RestController
 @RequestMapping("api/mascotas")
 public class MascotaController {
@@ -27,12 +25,12 @@ public class MascotaController {
     }
 
     @GetMapping
-    public List<MascotaModel> listar(){
+    public List<MascotaModel> listar() {
         return service.listar();
     }
 
     @PostMapping
-    public MascotaModel guardar(@RequestBody MascotaModel mascota){
+    public MascotaModel guardar(@RequestBody MascotaModel mascota) {
         return service.guardar(mascota);
     }
 
@@ -44,9 +42,9 @@ public class MascotaController {
     @PutMapping("/{id}")
     public MascotaModel actualizar(@PathVariable Long id, @RequestBody MascotaModel mascota) {
         return service.actualizar(id, mascota);
-    
+
     }
-    
+
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Long id) {
         service.eliminar(id);

@@ -2,15 +2,15 @@ package Reporte.reporte.model;
 
 public class UsuarioDTO {
 
-    private Integer id;
+    private Long id;
     private String nombres;
     private String correo;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

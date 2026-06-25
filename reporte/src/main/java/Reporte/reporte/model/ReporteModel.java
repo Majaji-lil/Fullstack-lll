@@ -24,7 +24,7 @@ public class ReporteModel {
     private Long id;
 
     @Column(nullable = true)
-    private Integer usuarioId;
+    private Long usuarioId;
 
     @Column(nullable = true)
     private String usuarioNombre;

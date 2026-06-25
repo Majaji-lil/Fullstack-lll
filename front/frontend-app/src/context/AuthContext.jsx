@@ -22,7 +22,6 @@ export function AuthProvider({ children }) {
   const login = async (correo, password) => {
     setError('')
 
-    // Admin hardcodeado
     if (correo === ADMIN.correo && password === ADMIN.password) {
       const adminUser = { id: 0, nombres: 'Administrador', correo: ADMIN.correo }
 
@@ -39,6 +38,7 @@ export function AuthProvider({ children }) {
         `${API_USUARIOS}/login`,
         { correo, password }
       )
+
 
       localStorage.setItem('usuario', JSON.stringify(usuarioEncontrado))
       localStorage.setItem('isAdmin', 'false')
@@ -90,8 +90,15 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      usuario, isAdmin, isLoggedIn: !!usuario,
-      login, register, logout, error, setError,
+      usuario,
+      setUsuario,
+      isAdmin,
+      isLoggedIn: !!usuario,
+      login,
+      register,
+      logout,
+      error,
+      setError,
     }}>
       {children}
     </AuthContext.Provider>

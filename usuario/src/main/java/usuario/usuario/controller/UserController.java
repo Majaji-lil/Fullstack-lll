@@ -3,19 +3,10 @@ package usuario.usuario.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import usuario.usuario.model.UserModel;
-import usuario.usuario.repository.UserRepository;
 import usuario.usuario.service.UserService;
-
 import java.util.List;
 
 @RestController
@@ -24,9 +15,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @GetMapping
     public List<UserModel> listarTodos() {
@@ -40,11 +28,14 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserModel> login(@RequestBody UserModel credenciales) {
-        return userRepository.findByCorreo(credenciales.getCorreo())
-                .filter(u -> u.getPassword().equals(credenciales.getPassword()))
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    public ResponseEntity<?> login(@RequestBody UserModel credenciales) {
+        UserModel usuarioValido = userService.autenticar(credenciales.getCorreo(), credenciales.getPassword());
+
+        if (usuarioValido != null) {
+            return ResponseEntity.ok(usuarioValido);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Correo o contraseña incorrectos");
+        }
     }
 
     @PostMapping
@@ -56,7 +47,6 @@ public class UserController {
     public ResponseEntity<UserModel> actualizar(@PathVariable Integer id, @RequestBody UserModel userDetails) {
         UserModel user = userService.encontrarPorId(id);
         if (user != null) {
-
             user.setCorreo(userDetails.getCorreo());
             user.setNombres(userDetails.getNombres());
 

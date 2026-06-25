@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 C:\Users\matth\Downloads\Fullstack-lll\reporte\src\main\java\Reporte\reporte\controller\ReporteController.java
 C:\Users\matth\Downloads\Fullstack-lll\reporte\src\main\java\Reporte\reporte\model\MascotaDTO.java
 C:\Users\matth\Downloads\Fullstack-lll\reporte\src\main\java\Reporte\reporte\model\ReporteModel.java
@@ -11,3 +12,18 @@ C:\Users\matth\Downloads\Fullstack-lll\reporte\src\main\java\Reporte\reporte\ser
 C:\Users\matth\Downloads\Fullstack-lll\reporte\src\main\java\Reporte\reporte\service\ReporteService.java
 C:\Users\matth\Downloads\Fullstack-lll\reporte\src\main\java\Reporte\reporte\service\UbicacionService.java
 C:\Users\matth\Downloads\Fullstack-lll\reporte\src\main\java\Reporte\reporte\service\UsuarioService.java
+=======
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\controller\ReporteController.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\model\MascotaDTO.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\model\ReporteModel.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\model\ReporteRequest.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\model\UbicacionModel.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\model\UsuarioDTO.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\ReporteApplication.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\repository\ReporteRepository.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\repository\UbicacionRepository.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\service\MascotaService.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\service\ReporteService.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\service\UbicacionService.java
+C:\Users\Asus\fs3\Fullstack-lll\reporte\src\main\java\Reporte\reporte\service\UsuarioService.java
+>>>>>>> feature/pruebas-merge
