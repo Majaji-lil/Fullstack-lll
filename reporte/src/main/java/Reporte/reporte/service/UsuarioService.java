@@ -18,7 +18,7 @@ public class UsuarioService {
         this.restTemplate = new RestTemplate();
     }
 
-    public UsuarioDTO obtenerUsuarioPorId(Integer id) {
+    public UsuarioDTO obtenerUsuarioPorId(long id) {
         try {
             return restTemplate.getForObject(
                     usuarioServiceUrl + "/api/usuarios/" + id,

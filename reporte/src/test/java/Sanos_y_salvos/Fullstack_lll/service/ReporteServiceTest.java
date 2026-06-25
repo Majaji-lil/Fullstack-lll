@@ -54,7 +54,7 @@ public class ReporteServiceTest {
         mascota.setNombre("Firulais");
 
         UsuarioDTO usuario = new UsuarioDTO();
-        usuario.setId(1);
+        usuario.setId(null);
         usuario.setNombres("Juan Pérez");
 
         ReporteModel reporteGuardado = new ReporteModel();
@@ -62,7 +62,7 @@ public class ReporteServiceTest {
         reporteGuardado.setDescripcion("Mascota vista en el parque");
         reporteGuardado.setMascotaId(1L);
         reporteGuardado.setMascotaNombre("Firulais");
-        reporteGuardado.setUsuarioId(1);
+        reporteGuardado.setUsuarioId(null);
         reporteGuardado.setUsuarioNombre("Juan Pérez");
         reporteGuardado.setLatitud(-33.4489);
         reporteGuardado.setLongitud(-70.6693);

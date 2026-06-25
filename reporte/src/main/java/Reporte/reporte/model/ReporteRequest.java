@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class ReporteRequest {
 
-    private long usuarioId;
+    // CORREGIDO: Cambiado de long a Long para estandarizar con IDs de base de datos
+    private Long usuarioId;
     private String descripcion;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -18,11 +19,13 @@ public class ReporteRequest {
     public ReporteRequest() {
     }
 
-    public Integer getUsuarioId() {
+    // CORREGIDO: Cambiado el retorno de Integer a Long
+    public Long getUsuarioId() {
         return usuarioId;
     }
 
-    public void setUsuarioId(long usuarioId) {
+    // CORREGIDO: Cambiado el parámetro de long a Long
+    public void setUsuarioId(Long usuarioId) {
         this.usuarioId = usuarioId;
     }
 
