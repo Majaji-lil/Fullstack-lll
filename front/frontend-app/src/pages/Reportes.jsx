@@ -69,7 +69,7 @@ const buildMeta = (r) => {
     const partes = []
     if (r.mascotaNombre) partes.push('🐾 ' + r.mascotaNombre)
     if (r.fechaHora) partes.push('📅 ' + formatFecha(r.fechaHora))
-    if (r.ubicacion && r.ubicacion.comuna) partes.push('📍 ' + r.ubicacion.comuna)
+    if (r.usuarioNombre) partes.push('👤 ' + r.usuarioNombre)
     return partes.join('  ·  ')
 }
 
@@ -96,6 +96,17 @@ const obtenerTextoBadge = (desc, defecto) => {
     return defecto || 'Reporte'
 }
 
+const buscarComunaPorCoords = (lat, lng) => {
+    if (lat == null || lng == null) return null
+    let masCercana = null
+    let menorDistancia = Infinity
+    for (const c of COMUNAS) {
+        const d = Math.sqrt((c.latitud - lat) ** 2 + (c.longitud - lng) ** 2)
+        if (d < menorDistancia) { menorDistancia = d; masCercana = c.nombre }
+    }
+    return masCercana
+}
+
 function Reportes() {
     const [reportes, setReportes] = useState([])
     const [mascotas, setMascotas] = useState([])
@@ -107,7 +118,7 @@ function Reportes() {
     const [formError, setFormError] = useState('')
     const [guardando, setGuardando] = useState(false)
     const [filtroActual, setFiltroActual] = useState('Todas')
-    const { usuario } = useAuth()
+    const { usuario, isAdmin } = useAuth()
 
     const cargar = () => {
         setLoading(true)
@@ -153,13 +164,15 @@ function Reportes() {
             descLimpia = rawDesc.replace(/^\[Perdida\]\s*/, '')
         }
 
+        const comunaDetectada = buscarComunaPorCoords(reporte.latitud, reporte.longitud) || ''
+
         setForm({
             descripcion: descLimpia,
             fechaHora: formatearFechaParaInput(reporte.fechaHora),
             mascotaId: reporte.mascotaId ? String(reporte.mascotaId) : '',
             crearNuevaMascota: false,
             nuevaMascota: { nombre: '', especie: '', raza: '', colorCaracteristica: '', tamano: '' },
-            comuna: reporte.ubicacion?.comuna || '',
+            comuna: comunaDetectada,
             tipo: tipoDetectado,
         })
         setModal(true)
@@ -173,6 +186,13 @@ function Reportes() {
 
     const handleMascotaNuevaChange = (campo, valor) =>
         setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
+
+    // Solo el admin o el autor del reporte pueden editarlo/eliminarlo
+    const puedeEditar = (reporte) => {
+        if (!usuario) return false
+        if (isAdmin) return true
+        return reporte.usuarioId === usuario.id
+    }
 
     const guardar = async () => {
         setFormError('')
@@ -197,7 +217,6 @@ function Reportes() {
         try {
             let mascotaIdFinal = f.mascotaId ? Number(f.mascotaId) : (editando ? editando.mascotaId : null)
 
-            // 1. Si es una mascota nueva, la creamos primero
             if (!editando && f.crearNuevaMascota) {
                 const payloadMascotaNueva = {
                     nombre: f.nuevaMascota.nombre.trim(),
@@ -215,23 +234,22 @@ function Reportes() {
             // 2. Buscamos las coordenadas de la comuna seleccionada
             const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
 
-            // 3. Armamos el reporte incluyendo la ubicación directamente aquí (Como pide DEV)
+            // 3. Armamos el reporte — incluye usuarioId para vincular el autor
             const payloadReporte = {
                 descripcion: '[' + f.tipo + '] ' + f.descripcion.trim(),
                 fechaHora: formatearFechaParaJava(f.fechaHora),
                 mascotaId: mascotaIdFinal,
                 longitud: comunaData ? comunaData.longitud : null,
-                latitud: comunaData ? comunaData.latitud : null
+                latitud: comunaData ? comunaData.latitud : null,
+                // ✅ Vincula el reporte al usuario logueado (admin tiene id 0, se omite)
+                usuarioId: (usuario && usuario.id) ? usuario.id : null,
             }
 
-            // 4. Enviamos una sola petición limpia
             if (editando) {
                 await axios.put(`${API_REPORTES}/${editando.id}`, payloadReporte)
             } else {
                 await axios.post(API_REPORTES, payloadReporte)
             }
-
-            // Eliminamos el antiguo bloque de "reporteId /ubicacion" que hacía fallar todo
 
             closeModal()
             cargar()
@@ -304,8 +322,8 @@ function Reportes() {
                         badge={obtenerTextoBadge(r.descripcion, r.mascotaNombre)}
                         badgeColor={obtenerColorBadge(r.descripcion)}
                         meta={buildMeta(r)}
-                        onEdit={() => openEdit(r)}
-                        onDelete={() => eliminar(r.id)}
+                        onEdit={puedeEditar(r) ? () => openEdit(r) : undefined}
+                        onDelete={puedeEditar(r) ? () => eliminar(r.id) : undefined}
                     />
                 ))}
             </div>
@@ -345,7 +363,6 @@ function Reportes() {
                         onChange={e => setForm({ ...form, fechaHora: e.target.value })}
                     />
 
-                    {/* Al editar, ocultamos el flujo de creación o reasignación de mascotas para evitar inconsistencias en la BD */}
                     {!editando && (
                         <>
                             <hr className="reportes-form-divider" />
@@ -419,4 +436,4 @@ function Reportes() {
     )
 }
 
-export default Reportes;
+export default Reportes

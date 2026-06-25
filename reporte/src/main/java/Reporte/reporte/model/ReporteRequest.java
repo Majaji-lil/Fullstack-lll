@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class ReporteRequest {
 
-    private Long usuarioId;
+    private Integer usuarioId;
     private String descripcion;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -18,11 +18,11 @@ public class ReporteRequest {
     public ReporteRequest() {
     }
 
-    public Long getUsuarioId() {
+    public Integer getUsuarioId() {
         return usuarioId;
     }
 
-    public void setUsuarioId(Long usuarioId) {
+    public void setUsuarioId(Integer usuarioId) {
         this.usuarioId = usuarioId;
     }
 
@@ -54,7 +54,7 @@ public class ReporteRequest {
         return longitud;
     }
 
-    public void setLongitud(Double longitud){
+    public void setLongitud(Double longitud) {
         this.longitud = longitud;
     }
 
@@ -62,7 +62,7 @@ public class ReporteRequest {
         return latitud;
     }
 
-    public void setLatitud(Double latitud){
+    public void setLatitud(Double latitud) {
         this.latitud = latitud;
     }
 }

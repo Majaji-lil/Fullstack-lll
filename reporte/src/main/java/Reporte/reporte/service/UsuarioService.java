@@ -10,7 +10,6 @@ import Reporte.reporte.model.UsuarioDTO;
 @Service
 public class UsuarioService {
 
-
     private final RestTemplate restTemplate;
     private final String usuarioServiceUrl;
 
@@ -19,12 +18,11 @@ public class UsuarioService {
         this.restTemplate = new RestTemplate();
     }
 
-    public UsuarioDTO obtenerUsuarioPorId(Long id) {
+    public UsuarioDTO obtenerUsuarioPorId(Integer id) {
         try {
             return restTemplate.getForObject(
-                usuarioServiceUrl + "/api/usuarios/" + id,
-                UsuarioDTO.class
-            );
+                    usuarioServiceUrl + "/api/usuarios/" + id,
+                    UsuarioDTO.class);
         } catch (RestClientException ex) {
             return null;
         }
