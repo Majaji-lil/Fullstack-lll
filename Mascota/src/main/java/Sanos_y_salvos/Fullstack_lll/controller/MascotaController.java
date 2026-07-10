@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import Sanos_y_salvos.Fullstack_lll.service.MascotaService;
 
 @RestController
 @RequestMapping("api/mascotas")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class MascotaController {
 
     private final MascotaService service;
