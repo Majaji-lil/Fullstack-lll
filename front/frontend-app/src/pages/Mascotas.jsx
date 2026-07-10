@@ -1,7 +1,7 @@
 // src/pages/Mascotas.jsx
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { API_MASCOTAS } from '../api/urls'
+import { API_MASCOTAS, API_BASE } from '../api/urls'
 import { useAuth } from '../context/AuthContext'
 import InfoCard from '../components/molecules/InfoCard'
 import Modal from '../organisms/Modal'
@@ -12,8 +12,7 @@ import '../styles/pages/Mascotas.css'
 
 const EMPTY = { nombre: '', especie: '', raza: '', colorCaracteristica: '', tamano: '', estado: 'Perdida' }
 
-const fotoUrl = (id) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8090'}/api/mascotas/${id}/foto`
-
+const fotoUrl = (id) => `${API_BASE}/api/mascotas/${id}/foto`
 function FotoPreview({ file }) {
     const [preview, setPreview] = useState(null)
     useEffect(() => {

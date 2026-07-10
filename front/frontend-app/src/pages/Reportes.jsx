@@ -1,7 +1,7 @@
 // src/pages/Reportes.jsx
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { API_REPORTES, API_MASCOTAS } from '../api/urls'
+import { API_REPORTES, API_MASCOTAS, API_BASE } from '../api/urls'
 import { useAuth } from '../context/AuthContext'
 import InfoCard from '../components/molecules/InfoCard'
 import Modal from '../organisms/Modal'
@@ -55,7 +55,7 @@ const EMPTY_FORM = {
     tipo: 'Perdida',
 }
 
-const fotoUrl = (id) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8090'}/api/mascotas/${id}/foto`
+const fotoUrl = (id) => `${API_BASE}/api/mascotas/${id}/foto`
 
 const formatFecha = (f) => {
     if (!f) return null
