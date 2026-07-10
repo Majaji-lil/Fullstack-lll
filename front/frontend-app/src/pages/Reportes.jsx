@@ -32,7 +32,7 @@ const COMUNAS = [
     { nombre: 'Ñuñoa', latitud: -33.4569, longitud: -70.5990 },
     { nombre: 'Pedro Aguirre Cerda', latitud: -33.5000, longitud: -70.6833 },
     { nombre: 'Peñalolén', latitud: -33.4833, longitud: -70.5333 },
-    { nombre: 'Providencia', latitud: -33.4326, longitud: -70.6189 },
+    { font: 'Providencia', latitud: -33.4326, longitud: -70.6189 },
     { nombre: 'Pudahuel', latitud: -33.4333, longitud: -70.7667 },
     { nombre: 'Quilicura', latitud: -33.3667, longitud: -70.7333 },
     { nombre: 'Quinta Normal', latitud: -33.4333, longitud: -70.7000 },
@@ -122,23 +122,27 @@ function FotoPreview({ file }) {
     return <img src={preview} alt="Preview" className="mascota-foto-preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px', marginTop: '10px' }} />
 }
 
-// Subcomponente independiente para evitar error de hooks #310
+// Subcomponente independiente con Zoom incorporado
 function ReporteCard({ r, cacheBuster, puedeEditar, openEdit, eliminar }) {
     const [fotoOk, setFotoOk] = useState(true)
+    const [zoomActivo, setZoomActivo] = useState(false) // Estado para el zoom
 
     useEffect(() => {
         setFotoOk(true)
     }, [cacheBuster, r.mascotaId])
 
+    const urlImagenCompleta = `${fotoUrl(r.mascotaId)}?t=${cacheBuster}`
+
     return (
         <div className="reporte-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '8px', border: '1px solid #eee' }}>
             {r.mascotaId && fotoOk ? (
                 <img
-                    src={`${fotoUrl(r.mascotaId)}?t=${cacheBuster}`}
+                    src={urlImagenCompleta}
                     alt="Mascota"
                     className="reporte-card__img"
-                    style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', cursor: 'pointer' }}
                     onError={() => setFotoOk(false)}
+                    onClick={() => setZoomActivo(true)} // Activa zoom al hacer click
                 />
             ) : (
                 <div className="reporte-card__placeholder" style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', fontSize: '2rem' }}>📋</div>
@@ -153,6 +157,26 @@ function ReporteCard({ r, cacheBuster, puedeEditar, openEdit, eliminar }) {
                     onDelete={puedeEditar(r) ? () => eliminar(r.id) : undefined}
                 />
             </div>
+
+            {/* Modal de Zoom */}
+            {zoomActivo && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0, left: 0, width: '100vw', height: '100vh',
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 10000, cursor: 'zoom-out'
+                    }}
+                    onClick={() => setZoomActivo(false)} // Cierra zoom al hacer click afuera o en la imagen
+                >
+                    <img
+                        src={urlImagenCompleta}
+                        alt="Zoom de Mascota"
+                        style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '12px', objectFit: 'contain', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                    />
+                </div>
+            )}
         </div>
     )
 }
@@ -243,7 +267,6 @@ export default function Reportes() {
     const handleMascotaNuevaChange = (campo, valor) =>
         setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
 
-    // SEGURIDAD DE HIERRO: Si no hay usuario, nadie edita nada.
     const puedeEditar = (reporte) => {
         if (!usuario) return false
         if (isAdmin) return true
@@ -254,7 +277,6 @@ export default function Reportes() {
         setFormError('')
         const f = form
 
-        // Bloqueo de seguridad definitivo en submit
         if (!usuario) {
             setFormError('Debes iniciar sesión para realizar esta acción.')
             return
@@ -286,7 +308,7 @@ export default function Reportes() {
                     raza: f.nuevaMascota.raza.trim() || null,
                     colorCaracteristica: f.nuevaMascota.colorCaracteristica.trim() || null,
                     tamano: f.nuevaMascota.tamano.trim() || null,
-                    usuarioId: usuario.id, // Vinculada al creador
+                    usuarioId: usuario.id,
                     usuarioNombre: usuario.nombres || null
                 }
 
@@ -294,7 +316,6 @@ export default function Reportes() {
                 mascotaIdFinal = mascotaGuardada.id
                 mascotaCreadaId = mascotaGuardada.id
 
-                // Subir la foto si se seleccionó una
                 if (fotoFile && mascotaIdFinal) {
                     const formData = new FormData()
                     formData.append('archivo', fotoFile)
@@ -312,7 +333,7 @@ export default function Reportes() {
                 mascotaId: mascotaIdFinal,
                 longitud: comunaData ? comunaData.longitud : null,
                 latitud: comunaData ? comunaData.latitud : null,
-                usuarioId: editando ? editando.usuarioId : usuario.id, // Mantiene dueño original o asigna el actual logueado
+                usuarioId: editando ? editando.usuarioId : usuario.id,
             }
 
             if (editando) {
