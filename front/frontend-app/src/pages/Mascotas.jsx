@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_MASCOTAS } from '../api/urls'
+import { useAuth } from '../context/AuthContext' // Añadido para protección
 import InfoCard from '../components/molecules/InfoCard'
 import Modal from '../organisms/Modal'
 import Input from '../components/atoms/Input'
@@ -11,21 +12,94 @@ import '../styles/pages/Mascotas.css'
 
 const EMPTY = { nombre: '', especie: '', raza: '', colorCaracteristica: '', tamano: '', estado: 'Perdida' }
 
-function Mascotas() {
+const fotoUrl = (id) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8090'}/api/mascotas/${id}/foto`
+
+function FotoPreview({ file }) {
+    const [preview, setPreview] = useState(null)
+    useEffect(() => {
+        if (!file) { setPreview(null); return }
+        const url = URL.createObjectURL(file)
+        setPreview(url)
+        return () => URL.revokeObjectURL(url)
+    }, [file])
+
+    if (!preview) return null
+    return <img src={preview} alt="Preview" className="mascota-foto-preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px', marginTop: '10px' }} />
+}
+
+// Subcomponente independiente para evitar error de hooks #310
+function MascotaCard({ m, cacheBuster, puedeEditarMascota, openEdit, eliminar }) {
+    const [fotoOk, setFotoOk] = useState(true)
+
+    useEffect(() => {
+        setFotoOk(true)
+    }, [cacheBuster, m.id])
+
+    const rawColor = m.colorCaracteristica || m.color_caracteristica || ''
+    const esEncontrada = rawColor.startsWith('[Encontrada]')
+    const esAvistada = rawColor.startsWith('[Avistada]')
+
+    let textoBadge = "Perdida"
+    let colorBadge = "red"
+
+    if (esEncontrada) {
+        textoBadge = "Encontrada"; colorBadge = "green"
+    } else if (esAvistada) {
+        textoBadge = "Avistada"; colorBadge = "orange"
+    }
+
+    const colorMostrar = rawColor.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') || 'Sin especificar'
+
+    return (
+        <div className="mascota-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '8px', border: '1px solid #eee' }}>
+            {fotoOk ? (
+                <img
+                    src={`${fotoUrl(m.id)}?t=${cacheBuster}`}
+                    alt={m.nombre}
+                    className="mascota-card__img"
+                    style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    onError={() => setFotoOk(false)}
+                />
+            ) : (
+                <div className="mascota-card__placeholder" style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', fontSize: '2rem' }}>🐾</div>
+            )}
+            <div className="mascota-card__content" style={{ padding: '1rem', flexGrow: 1 }}>
+                <InfoCard
+                    title={m.nombre || 'Sin nombre'}
+                    badge={textoBadge}
+                    badgeColor={colorBadge}
+                    description={m.especie && `${m.especie}${m.raza ? ` · ${m.raza}` : ''}`}
+                    meta={[
+                        colorMostrar && `🎨 ${colorMostrar}`,
+                        m.tamano && `📏 ${m.tamano}`,
+                    ].filter(Boolean).join('  ·  ')}
+                    onEdit={puedeEditarMascota(m) ? () => openEdit(m) : undefined}
+                    onDelete={puedeEditarMascota(m) ? () => eliminar(m.id) : undefined}
+                />
+            </div>
+        </div>
+    )
+}
+
+export default function Mascotas() {
     const [mascotas, setMascotas] = useState([])
+    const [cacheBuster, setCacheBuster] = useState(Date.now())
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [modal, setModal] = useState(false)
     const [editando, setEditando] = useState(null)
     const [form, setForm] = useState(EMPTY)
+    const [fotoFile, setFotoFile] = useState(null)
     const [filtroActual, setFiltroActual] = useState('Todas')
+    const { usuario, isAdmin } = useAuth() // Desestructuración del auth
 
     const cargar = () => {
         setLoading(true)
         axios.get(API_MASCOTAS)
-            .then(r => { 
+            .then(r => {
                 setMascotas(r.data)
-                setError(null) 
+                setCacheBuster(Date.now())
+                setError(null)
             })
             .catch(() => setError('No se pudo conectar al servicio de mascotas'))
             .finally(() => setLoading(false))
@@ -38,15 +112,17 @@ function Mascotas() {
         onChange: e => setForm({ ...form, [key]: e.target.value }),
     })
 
-    const openCreate = () => { 
+    const openCreate = () => {
         setForm(EMPTY)
         setEditando(null)
-        setModal(true) 
+        setFotoFile(null)
+        setModal(true)
     }
 
     const openEdit = (m) => {
+        setFotoFile(null)
         const rawColor = m.colorCaracteristica || m.color_caracteristica || ''
-        
+
         const esEncontrada = rawColor.startsWith('[Encontrada]')
         const esAvistada = rawColor.startsWith('[Avistada]')
         const esPerdida = rawColor.startsWith('[Perdida]')
@@ -69,7 +145,7 @@ function Mascotas() {
             nombre: m.nombre || '',
             especie: m.especie || '',
             raza: m.raza || '',
-            colorCaracteristica: colorLimpio, 
+            colorCaracteristica: colorLimpio,
             tamano: m.tamano || '',
             estado: estadoDetectado
         })
@@ -77,24 +153,56 @@ function Mascotas() {
         setModal(true)
     }
 
-    const closeModal = () => setModal(false)
+    const closeModal = () => {
+        setModal(false)
+        setFotoFile(null)
+    }
+
+    // SEGURIDAD DE HIERRO: Bloqueo estricto por sesión
+    const puedeEditarMascota = (mascota) => {
+        if (!usuario) return false
+        if (isAdmin) return true
+        return mascota.usuarioId === usuario.id
+    }
 
     const guardar = () => {
+        if (!usuario) {
+            alert('Debes iniciar sesión para guardar una mascota.')
+            return
+        }
+
         const payload = {
             nombre: form.nombre.trim(),
             especie: form.especie.trim(),
             raza: form.raza.trim() || null,
             colorCaracteristica: `[${form.estado}] ${form.colorCaracteristica.trim()}`.trim(),
-            tamano: form.tamano.trim() || null
+            tamano: form.tamano.trim() || null,
+            usuarioId: editando ? editando.usuarioId : usuario.id, // Preserva creador original o asigna el logueado
+            usuarioNombre: editando ? editando.usuarioNombre : (usuario.nombres || null)
         }
 
         const req = editando
             ? axios.put(`${API_MASCOTAS}/${editando.id}`, payload)
             : axios.post(API_MASCOTAS, payload)
 
-        req.then(() => { 
+        req.then(async (res) => {
+            const mascotaId = editando ? editando.id : res.data.id
+
+            // Si hay un archivo seleccionado, enviarlo al endpoint de fotos
+            if (fotoFile && mascotaId) {
+                const formData = new FormData()
+                formData.append('archivo', fotoFile)
+                try {
+                    await axios.post(`${API_MASCOTAS}/${mascotaId}/foto`, formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    })
+                } catch (imgErr) {
+                    console.error('Error subiendo la foto:', imgErr)
+                }
+            }
+
             closeModal()
-            cargar() 
+            cargar()
         }).catch(() => alert('Error al guardar la mascota'))
     }
 
@@ -129,26 +237,26 @@ function Mascotas() {
             </div>
 
             <div className="mascotas-filtros-bar">
-                <button 
-                    className={`m-filtro-btn m-btn-todas ${filtroActual === 'Todas' ? 'activo' : ''}`} 
+                <button
+                    className={`m-filtro-btn m-btn-todas ${filtroActual === 'Todas' ? 'activo' : ''}`}
                     onClick={() => setFiltroActual('Todas')}
                 >
                     Todas
                 </button>
-                <button 
-                    className={`m-filtro-btn m-btn-perdidas ${filtroActual === 'Perdidas' ? 'activo' : ''}`} 
+                <button
+                    className={`m-filtro-btn m-btn-perdidas ${filtroActual === 'Perdidas' ? 'activo' : ''}`}
                     onClick={() => setFiltroActual('Perdidas')}
                 >
                     ⚠️ Perdidas
                 </button>
-                <button 
-                    className={`m-filtro-btn m-btn-avistadas ${filtroActual === 'Avistadas' ? 'activo' : ''}`} 
+                <button
+                    className={`m-filtro-btn m-btn-avistadas ${filtroActual === 'Avistadas' ? 'activo' : ''}`}
                     onClick={() => setFiltroActual('Avistadas')}
                 >
                     👀 Avistadas
                 </button>
-                <button 
-                    className={`m-filtro-btn m-btn-encontradas ${filtroActual === 'Encontradas' ? 'activo' : ''}`} 
+                <button
+                    className={`m-filtro-btn m-btn-encontradas ${filtroActual === 'Encontradas' ? 'activo' : ''}`}
                     onClick={() => setFiltroActual('Encontradas')}
                 >
                     ✅ Encontradas
@@ -166,38 +274,16 @@ function Mascotas() {
             )}
 
             <div className="card-grid">
-                {mascotasFiltradas.map(m => {
-                    const rawColor = m.colorCaracteristica || m.color_caracteristica || ''
-                    const esEncontrada = rawColor.startsWith('[Encontrada]')
-                    const esAvistada = rawColor.startsWith('[Avistada]')
-
-                    let textoBadge = "Perdida"
-                    let colorBadge = "red"
-
-                    if (esEncontrada) { 
-                        textoBadge = "Encontrada"; colorBadge = "green" 
-                    } else if (esAvistada) { 
-                        textoBadge = "Avistada"; colorBadge = "orange" 
-                    }
-
-                    const colorMostrar = rawColor.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') || 'Sin especificar'
-
-                    return (
-                        <InfoCard
-                            key={m.id}
-                            title={m.nombre || 'Sin nombre'}
-                            badge={textoBadge}
-                            badgeColor={colorBadge}
-                            description={m.especie && `${m.especie}${m.raza ? ` · ${m.raza}` : ''}`}
-                            meta={[
-                                colorMostrar && `🎨 ${colorMostrar}`,
-                                m.tamano && `📏 ${m.tamano}`,
-                            ].filter(Boolean).join('  ·  ')}
-                            onEdit={() => openEdit(m)}
-                            onDelete={() => eliminar(m.id)}
-                        />
-                    )
-                })}
+                {mascotasFiltradas.map(m => (
+                    <MascotaCard
+                        key={m.id}
+                        m={m}
+                        cacheBuster={cacheBuster}
+                        puedeEditarMascota={puedeEditarMascota}
+                        openEdit={openEdit}
+                        eliminar={eliminar}
+                    />
+                ))}
             </div>
 
             {modal && (
@@ -224,10 +310,14 @@ function Mascotas() {
                     <Input label="Raza" placeholder="Ej: Labrador" {...field('raza')} />
                     <Input label="Color / característica" placeholder="Ej: Café con blanco" {...field('colorCaracteristica')} />
                     <Input label="Tamaño" placeholder="Ej: Mediano" {...field('tamano')} />
+
+                    <div className="mascota-upload-section" style={{ marginTop: '1rem' }}>
+                        <label className="mascota-upload-label" style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>Foto de la mascota</label>
+                        <FotoPreview file={fotoFile} />
+                        <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0] || null)} style={{ marginTop: '5px' }} />
+                    </div>
                 </Modal>
             )}
         </div>
     )
 }
-
-export default Mascotas;

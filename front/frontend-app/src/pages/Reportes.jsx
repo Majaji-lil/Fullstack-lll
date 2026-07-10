@@ -55,6 +55,8 @@ const EMPTY_FORM = {
     tipo: 'Perdida',
 }
 
+const fotoUrl = (id) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8090'}/api/mascotas/${id}/foto`
+
 const formatFecha = (f) => {
     if (!f) return null
     try {
@@ -107,14 +109,64 @@ const buscarComunaPorCoords = (lat, lng) => {
     return masCercana
 }
 
-function Reportes() {
+function FotoPreview({ file }) {
+    const [preview, setPreview] = useState(null)
+    useEffect(() => {
+        if (!file) { setPreview(null); return }
+        const url = URL.createObjectURL(file)
+        setPreview(url)
+        return () => URL.revokeObjectURL(url)
+    }, [file])
+
+    if (!preview) return null
+    return <img src={preview} alt="Preview" className="mascota-foto-preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px', marginTop: '10px' }} />
+}
+
+// Subcomponente independiente para evitar error de hooks #310
+function ReporteCard({ r, cacheBuster, puedeEditar, openEdit, eliminar }) {
+    const [fotoOk, setFotoOk] = useState(true)
+
+    useEffect(() => {
+        setFotoOk(true)
+    }, [cacheBuster, r.mascotaId])
+
+    return (
+        <div className="reporte-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '8px', border: '1px solid #eee' }}>
+            {r.mascotaId && fotoOk ? (
+                <img
+                    src={`${fotoUrl(r.mascotaId)}?t=${cacheBuster}`}
+                    alt="Mascota"
+                    className="reporte-card__img"
+                    style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    onError={() => setFotoOk(false)}
+                />
+            ) : (
+                <div className="reporte-card__placeholder" style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', fontSize: '2rem' }}>📋</div>
+            )}
+            <div className="reporte-card__content" style={{ padding: '1rem', flexGrow: 1 }}>
+                <InfoCard
+                    title={r.descripcion ? r.descripcion.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') : ''}
+                    badge={obtenerTextoBadge(r.descripcion, r.mascotaNombre)}
+                    badgeColor={obtenerColorBadge(r.descripcion)}
+                    meta={buildMeta(r)}
+                    onEdit={puedeEditar(r) ? () => openEdit(r) : undefined}
+                    onDelete={puedeEditar(r) ? () => eliminar(r.id) : undefined}
+                />
+            </div>
+        </div>
+    )
+}
+
+export default function Reportes() {
     const [reportes, setReportes] = useState([])
     const [mascotas, setMascotas] = useState([])
+    const [cacheBuster, setCacheBuster] = useState(Date.now())
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [modal, setModal] = useState(false)
     const [editando, setEditando] = useState(null)
     const [form, setForm] = useState(EMPTY_FORM)
+    const [fotoFile, setFotoFile] = useState(null)
     const [formError, setFormError] = useState('')
     const [guardando, setGuardando] = useState(false)
     const [filtroActual, setFiltroActual] = useState('Todas')
@@ -126,6 +178,7 @@ function Reportes() {
             .then(([rR, rM]) => {
                 setReportes(rR.data)
                 setMascotas(rM.data)
+                setCacheBuster(Date.now())
                 setError(null)
             })
             .catch(() => setError('No se pudo conectar al servicio de reportes o mascotas'))
@@ -137,6 +190,7 @@ function Reportes() {
     const openCreate = () => {
         setForm(EMPTY_FORM)
         setEditando(null)
+        setFotoFile(null)
         setFormError('')
         setModal(true)
     }
@@ -144,6 +198,7 @@ function Reportes() {
     const openEdit = (reporte) => {
         setFormError('')
         setEditando(reporte)
+        setFotoFile(null)
 
         const rawDesc = reporte.descripcion || ''
         const esEncontrada = rawDesc.startsWith('[Encontrada]')
@@ -181,12 +236,14 @@ function Reportes() {
     const closeModal = () => {
         setModal(false)
         setEditando(null)
+        setFotoFile(null)
         setFormError('')
     }
 
     const handleMascotaNuevaChange = (campo, valor) =>
         setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
 
+    // SEGURIDAD DE HIERRO: Si no hay usuario, nadie edita nada.
     const puedeEditar = (reporte) => {
         if (!usuario) return false
         if (isAdmin) return true
@@ -196,6 +253,12 @@ function Reportes() {
     const guardar = async () => {
         setFormError('')
         const f = form
+
+        // Bloqueo de seguridad definitivo en submit
+        if (!usuario) {
+            setFormError('Debes iniciar sesión para realizar esta acción.')
+            return
+        }
 
         if (!f.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
         if (!f.comuna) { setFormError('Debes seleccionar una comuna'); return }
@@ -222,12 +285,23 @@ function Reportes() {
                     especie: f.nuevaMascota.especie.trim(),
                     raza: f.nuevaMascota.raza.trim() || null,
                     colorCaracteristica: f.nuevaMascota.colorCaracteristica.trim() || null,
-                    tamano: f.nuevaMascota.tamano.trim() || null
+                    tamano: f.nuevaMascota.tamano.trim() || null,
+                    usuarioId: usuario.id, // Vinculada al creador
+                    usuarioNombre: usuario.nombres || null
                 }
 
                 const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, payloadMascotaNueva)
                 mascotaIdFinal = mascotaGuardada.id
                 mascotaCreadaId = mascotaGuardada.id
+
+                // Subir la foto si se seleccionó una
+                if (fotoFile && mascotaIdFinal) {
+                    const formData = new FormData()
+                    formData.append('archivo', fotoFile)
+                    await axios.post(`${API_MASCOTAS}/${mascotaIdFinal}/foto`, formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    })
+                }
             }
 
             const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
@@ -238,7 +312,7 @@ function Reportes() {
                 mascotaId: mascotaIdFinal,
                 longitud: comunaData ? comunaData.longitud : null,
                 latitud: comunaData ? comunaData.latitud : null,
-                usuarioId: (usuario && usuario.id) ? usuario.id : null,
+                usuarioId: editando ? editando.usuarioId : usuario.id, // Mantiene dueño original o asigna el actual logueado
             }
 
             if (editando) {
@@ -312,14 +386,13 @@ function Reportes() {
 
             <div className="card-grid">
                 {reportesFiltrados.map(r => (
-                    <InfoCard
+                    <ReporteCard
                         key={r.id}
-                        title={r.descripcion ? r.descripcion.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') : ''}
-                        badge={obtenerTextoBadge(r.descripcion, r.mascotaNombre)}
-                        badgeColor={obtenerColorBadge(r.descripcion)}
-                        meta={buildMeta(r)}
-                        onEdit={puedeEditar(r) ? () => openEdit(r) : undefined}
-                        onDelete={puedeEditar(r) ? () => eliminar(r.id) : undefined}
+                        r={r}
+                        cacheBuster={cacheBuster}
+                        puedeEditar={puedeEditar}
+                        openEdit={openEdit}
+                        eliminar={eliminar}
                     />
                 ))}
             </div>
@@ -402,6 +475,12 @@ function Reportes() {
                                             <Input label="Color y características" placeholder="Ej: Café con blanco" value={form.nuevaMascota.colorCaracteristica} onChange={e => handleMascotaNuevaChange('colorCaracteristica', e.target.value)} />
                                             <Input label="Tamaño" placeholder="Ej: Mediano" value={form.nuevaMascota.tamano} onChange={e => handleMascotaNuevaChange('tamano', e.target.value)} />
                                         </div>
+
+                                        <div className="mascota-upload-section" style={{ marginTop: '1rem' }}>
+                                            <label className="mascota-upload-label" style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>Foto de la mascota (Opcional)</label>
+                                            <FotoPreview file={fotoFile} />
+                                            <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0] || null)} style={{ marginTop: '5px' }} />
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -431,5 +510,3 @@ function Reportes() {
         </div>
     )
 }
-
-export default Reportes
