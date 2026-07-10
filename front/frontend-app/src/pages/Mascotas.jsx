@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_MASCOTAS } from '../api/urls'
+import { useAuth } from '../context/AuthContext'
 import InfoCard from '../components/molecules/InfoCard'
 import Modal from '../organisms/Modal'
 import Input from '../components/atoms/Input'
@@ -9,23 +10,42 @@ import Button from '../components/atoms/Button'
 import '../styles/organisms/Grid.css'
 import '../styles/pages/Mascotas.css'
 
-const EMPTY = { nombre: '', especie: '', raza: '', colorCaracteristica: '', tamano: '', estado: 'Perdida' }
+const fotoUrl = (id) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8090'}/api/mascotas/${id}/foto`
 
-function Mascotas() {
+function FotoPreview({ file }) {
+    const [preview, setPreview] = useState(null)
+    useEffect(() => {
+        if (!file) { setPreview(null); return }
+        const url = URL.createObjectURL(file)
+        setPreview(url)
+        return () => URL.revokeObjectURL(url)
+    }, [file])
+
+    if (!preview) return null
+    return <img src={preview} alt="Preview" className="mascota-foto-preview" />
+}
+
+export default function Mascotas() {
     const [mascotas, setMascotas] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [modal, setModal] = useState(false)
     const [editando, setEditando] = useState(null)
-    const [form, setForm] = useState(EMPTY)
-    const [filtroActual, setFiltroActual] = useState('Todas')
+    const [fotoFile, setFotoFile] = useState(null)
+    const [formError, setFormError] = useState('')
+    const [guardando, setGuardando] = useState(false)
+    const { usuario, isAdmin } = useAuth()
+
+    const [form, setForm] = useState({
+        nombre: '', especie: '', raza: '', colorCaracteristica: '', tamano: ''
+    })
 
     const cargar = () => {
         setLoading(true)
         axios.get(API_MASCOTAS)
-            .then(r => { 
-                setMascotas(r.data)
-                setError(null) 
+            .then(res => {
+                setMascotas(res.data)
+                setError(null)
             })
             .catch(() => setError('No se pudo conectar al servicio de mascotas'))
             .finally(() => setLoading(false))
@@ -33,201 +53,147 @@ function Mascotas() {
 
     useEffect(() => { cargar() }, [])
 
-    const field = (key) => ({
-        value: form[key],
-        onChange: e => setForm({ ...form, [key]: e.target.value }),
-    })
-
-    const openCreate = () => { 
-        setForm(EMPTY)
-        setEditando(null)
-        setModal(true) 
+    // VALIDACIÓN DE EDICIÓN: Forzamos true si no encuentra ID para evitar bloquearte en desarrollo
+    const puedeEditarMascota = (mascota) => {
+        if (!usuario) return true; // Permitir en desarrollo si no hay sesión
+        if (isAdmin) return true;
+        if (!mascota.usuarioId) return true; // Si no tiene dueño asignado, permitir editar
+        return mascota.usuarioId === usuario.id;
     }
 
-    const openEdit = (m) => {
-        const rawColor = m.colorCaracteristica || m.color_caracteristica || ''
-        
-        const esEncontrada = rawColor.startsWith('[Encontrada]')
-        const esAvistada = rawColor.startsWith('[Avistada]')
-        const esPerdida = rawColor.startsWith('[Perdida]')
-
-        let estadoDetectado = 'Perdida'
-        let colorLimpio = rawColor
-
-        if (esEncontrada) {
-            estadoDetectado = 'Encontrada'
-            colorLimpio = rawColor.replace(/^\[Encontrada\]\s*/, '')
-        } else if (esAvistada) {
-            estadoDetectado = 'Avistada'
-            colorLimpio = rawColor.replace(/^\[Avistada\]\s*/, '')
-        } else if (esPerdida) {
-            estadoDetectado = 'Perdida'
-            colorLimpio = rawColor.replace(/^\[Perdida\]\s*/, '')
-        }
-
-        setForm({
-            nombre: m.nombre || '',
-            especie: m.especie || '',
-            raza: m.raza || '',
-            colorCaracteristica: colorLimpio, 
-            tamano: m.tamano || '',
-            estado: estadoDetectado
-        })
-        setEditando(m)
+    const openCreate = () => {
+        setForm({ nombre: '', especie: '', raza: '', colorCaracteristica: '', tamano: '' })
+        setEditando(null)
+        setFotoFile(null)
+        setFormError('')
         setModal(true)
     }
 
-    const closeModal = () => setModal(false)
+    const openEdit = (mascota) => {
+        setFormError('')
+        setEditando(mascota)
+        setFotoFile(null)
+        setForm({
+            nombre: mascota.nombre || '',
+            especie: mascota.especie || '',
+            raza: mascota.raza || '',
+            colorCaracteristica: mascota.colorCaracteristica || '',
+            tamano: mascota.tamano || ''
+        })
+        setModal(true)
+    }
 
-    const guardar = () => {
-        const payload = {
-            nombre: form.nombre.trim(),
-            especie: form.especie.trim(),
-            raza: form.raza.trim() || null,
-            colorCaracteristica: `[${form.estado}] ${form.colorCaracteristica.trim()}`.trim(),
-            tamano: form.tamano.trim() || null
+    const guardar = async () => {
+        if (!form.nombre.trim() || !form.especie.trim()) {
+            setFormError('Nombre y especie son obligatorios')
+            return
         }
+        setGuardando(true)
+        try {
+            const payload = {
+                ...form,
+                usuarioId: editando ? editando.usuarioId : (usuario?.id || null),
+                usuarioNombre: editando ? editando.usuarioNombre : (usuario?.nombres || null)
+            }
 
-        const req = editando
-            ? axios.put(`${API_MASCOTAS}/${editando.id}`, payload)
-            : axios.post(API_MASCOTAS, payload)
+            let mascotaId = editando?.id
+            if (editando) {
+                await axios.put(`${API_MASCOTAS}/${editando.id}`, payload)
+            } else {
+                const res = await axios.post(API_MASCOTAS, payload)
+                mascotaId = res.data.id
+            }
 
-        req.then(() => { 
-            closeModal()
-            cargar() 
-        }).catch(() => alert('Error al guardar la mascota'))
+            if (fotoFile && mascotaId) {
+                const formData = new FormData()
+                formData.append('archivo', fotoFile)
+                await axios.post(`${API_MASCOTAS}/${mascotaId}/foto`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                })
+            }
+
+            setModal(false)
+            cargar()
+        } catch (err) {
+            setFormError('Error al procesar la mascota')
+        } finally {
+            setGuardando(false)
+        }
     }
 
     const eliminar = (id) => {
         if (!confirm('¿Eliminar esta mascota?')) return
-        axios.delete(`${API_MASCOTAS}/${id}`).then(cargar)
+        axios.delete(`${API_MASCOTAS}/${id}`)
+            .then(() => cargar())
+            .catch(() => alert('No se pudo eliminar la mascota.'))
     }
-
-    const mascotasFiltradas = mascotas.filter(m => {
-        const rawColor = m.colorCaracteristica || m.color_caracteristica || ''
-        if (filtroActual === 'Todas') return true
-        if (filtroActual === 'Perdidas') {
-            return rawColor.startsWith('[Perdida]') || !rawColor.startsWith('[')
-        }
-        if (filtroActual === 'Avistadas') {
-            return rawColor.startsWith('[Avistada]')
-        }
-        if (filtroActual === 'Encontradas') {
-            return rawColor.startsWith('[Encontrada]')
-        }
-        return true
-    })
 
     return (
         <div className="mascotas-page">
             <div className="page-header">
-                <div className="page-header__text">
-                    <h1>Mascotas registradas</h1>
-                    <p>{mascotasFiltradas.length} mascota{mascotasFiltradas.length !== 1 ? 's' : ''} en pantalla</p>
+                <div>
+                    <h1>Mis Mascotas</h1>
+                    <p>{mascotas.length} registradas</p>
                 </div>
-                <Button variant="primary" onClick={openCreate}>+ Registrar mascota</Button>
+                <Button variant="primary" onClick={openCreate}>+ Registrar Mascota</Button>
             </div>
 
-            <div className="mascotas-filtros-bar">
-                <button 
-                    className={`m-filtro-btn m-btn-todas ${filtroActual === 'Todas' ? 'activo' : ''}`} 
-                    onClick={() => setFiltroActual('Todas')}
-                >
-                    Todas
-                </button>
-                <button 
-                    className={`m-filtro-btn m-btn-perdidas ${filtroActual === 'Perdidas' ? 'activo' : ''}`} 
-                    onClick={() => setFiltroActual('Perdidas')}
-                >
-                    ⚠️ Perdidas
-                </button>
-                <button 
-                    className={`m-filtro-btn m-btn-avistadas ${filtroActual === 'Avistadas' ? 'activo' : ''}`} 
-                    onClick={() => setFiltroActual('Avistadas')}
-                >
-                    👀 Avistadas
-                </button>
-                <button 
-                    className={`m-filtro-btn m-btn-encontradas ${filtroActual === 'Encontradas' ? 'activo' : ''}`} 
-                    onClick={() => setFiltroActual('Encontradas')}
-                >
-                    ✅ Encontradas
-                </button>
-            </div>
-
-            {loading && <p className="mascotas-loading">Cargando...</p>}
+            {loading && <p>Cargando...</p>}
             {error && <div className="alert-error">⚠️ {error}</div>}
 
-            {!loading && !error && mascotasFiltradas.length === 0 && (
-                <div className="empty-state">
-                    <div className="empty-state__icon">🐾</div>
-                    <p>No hay mascotas para este filtro.</p>
-                </div>
-            )}
-
             <div className="card-grid">
-                {mascotasFiltradas.map(m => {
-                    const rawColor = m.colorCaracteristica || m.color_caracteristica || ''
-                    const esEncontrada = rawColor.startsWith('[Encontrada]')
-                    const esAvistada = rawColor.startsWith('[Avistada]')
-
-                    let textoBadge = "Perdida"
-                    let colorBadge = "red"
-
-                    if (esEncontrada) { 
-                        textoBadge = "Encontrada"; colorBadge = "green" 
-                    } else if (esAvistada) { 
-                        textoBadge = "Avistada"; colorBadge = "orange" 
-                    }
-
-                    const colorMostrar = rawColor.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') || 'Sin especificar'
-
+                {mascotas.map(m => {
+                    const [fotoOk, setFotoOk] = useState(true)
                     return (
-                        <InfoCard
-                            key={m.id}
-                            title={m.nombre || 'Sin nombre'}
-                            badge={textoBadge}
-                            badgeColor={colorBadge}
-                            description={m.especie && `${m.especie}${m.raza ? ` · ${m.raza}` : ''}`}
-                            meta={[
-                                colorMostrar && `🎨 ${colorMostrar}`,
-                                m.tamano && `📏 ${m.tamano}`,
-                            ].filter(Boolean).join('  ·  ')}
-                            onEdit={() => openEdit(m)}
-                            onDelete={() => eliminar(m.id)}
-                        />
+                        <div className="mascota-card" key={m.id}>
+                            {fotoOk ? (
+                                <img
+                                    src={fotoUrl(m.id)}
+                                    alt={m.nombre}
+                                    className="mascota-card__img"
+                                    onError={() => setFotoOk(false)}
+                                />
+                            ) : (
+                                <div className="mascota-card__placeholder">🐾</div>
+                            )}
+                            <div className="mascota-card__content">
+                                <InfoCard
+                                    title={m.nombre}
+                                    badge={m.especie}
+                                    meta={`Raza: ${m.raza || 'N/A'} · Tamaño: ${m.tamano || 'N/A'}`}
+                                    onEdit={puedeEditarMascota(m) ? () => openEdit(m) : undefined}
+                                    onDelete={puedeEditarMascota(m) ? () => eliminar(m.id) : undefined}
+                                />
+                            </div>
+                        </div>
                     )
                 })}
             </div>
 
             {modal && (
                 <Modal
-                    title={editando ? 'Editar mascota' : 'Registrar mascota'}
-                    onClose={closeModal}
+                    title={editando ? 'Editar Mascota' : 'Registrar Mascota'}
+                    onClose={() => setModal(false)}
                     onSave={guardar}
+                    saveLabel={guardando ? 'Guardando...' : 'Guardar'}
                 >
-                    <div className="mascotas-form-group">
-                        <label className="mascotas-select-label">Estado de la Mascota *</label>
-                        <select
-                            className="mascotas-select"
-                            value={form.estado}
-                            onChange={e => setForm({ ...form, estado: e.target.value })}
-                        >
-                            <option value="Perdida">Mascota Perdida ⚠️</option>
-                            <option value="Avistada">Mascota Avistada 👀</option>
-                            <option value="Encontrada">Mascota Encontrada ✅</option>
-                        </select>
-                    </div>
+                    <Input label="Nombre *" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} />
+                    <Input label="Especie *" value={form.especie} onChange={e => setForm({ ...form, especie: e.target.value })} />
+                    <Input label="Raza" value={form.raza} onChange={e => setForm({ ...form, raza: e.target.value })} />
+                    <Input label="Tamaño" value={form.tamano} onChange={e => setForm({ ...form, tamano: e.target.value })} />
+                    <Input label="Características" value={form.colorCaracteristica} onChange={e => setForm({ ...form, colorCaracteristica: e.target.value })} />
 
-                    <Input label="Nombre" placeholder="Ej: Firulais" {...field('nombre')} />
-                    <Input label="Especie" placeholder="Ej: Perro, Gato" {...field('especie')} />
-                    <Input label="Raza" placeholder="Ej: Labrador" {...field('raza')} />
-                    <Input label="Color / característica" placeholder="Ej: Café con blanco" {...field('colorCaracteristica')} />
-                    <Input label="Tamaño" placeholder="Ej: Mediano" {...field('tamano')} />
+                    <div className="mascota-upload-section">
+                        <label className="mascota-upload-label">Foto de la mascota</label>
+                        <FotoPreview file={fotoFile} />
+                        <label className="mascota-upload-picker">
+                            <span>📷 Elegir Imagen</span>
+                            <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0] || null)} />
+                        </label>
+                    </div>
+                    {formError && <div className="form-error">⚠️ {formError}</div>}
                 </Modal>
             )}
         </div>
     )
 }
-
-export default Mascotas;

@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,13 +20,21 @@ public class MascotaModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
     private String nombre;
     private String especie;
     private String raza;
+
     @Column(name = "color_caracteristica")
     private String colorCaracteristica;
+
     private String tamano;
+
+    private Long usuarioId;
+    private String usuarioNombre;
+
+    @Lob
+    @Column(name = "foto", nullable = true, columnDefinition = "LONGBLOB")
+    private byte[] foto;
 }
