@@ -1,0 +1,29 @@
+/* src/styles/molecules/ThemeToggle.css */
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  background: var(--bg-hover);
+  border-color: var(--brand-green);
+}
+.theme-toggle:active {
+  transform: scale(0.92);
+}
+.theme-toggle__icon {
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.3s;
+}
+.theme-toggle:hover .theme-toggle__icon {
+  transform: rotate(20deg);
+}

@@ -21,15 +21,12 @@ public class UbicacionModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String direccion;
+    @Column(name = "comuna")
+    private String comuna;
 
     @Column(nullable = false)
-    private String ciudad;
+    private String latitud;
 
     @Column(nullable = false)
-    private String departamento;
-
-    @Column(nullable = false)
-    private String pais;
+    private String longitud;
 }

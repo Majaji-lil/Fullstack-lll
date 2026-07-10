@@ -8,20 +8,19 @@ import org.springframework.stereotype.Service;
 
 import Reporte.reporte.model.ReporteModel;
 import Reporte.reporte.model.ReporteRequest;
-import Reporte.reporte.model.UbicacionModel;
 import Reporte.reporte.repository.ReporteRepository;
 
 @Service
 public class ReporteService {
 
+    private final UsuarioService usuarioService;
     private final ReporteRepository repository;
     private final MascotaService mascotaService;
-    private final UbicacionService ubicacionService;
 
-    public ReporteService(ReporteRepository repository, MascotaService mascotaService, UbicacionService ubicacionService) {
+    public ReporteService(ReporteRepository repository, MascotaService mascotaService, UsuarioService usuarioService) {
         this.repository = repository;
         this.mascotaService = mascotaService;
-        this.ubicacionService = ubicacionService;
+        this.usuarioService = usuarioService;
     }
 
     public List<ReporteModel> listar() {
@@ -33,6 +32,7 @@ public class ReporteService {
     }
 
     public ReporteModel guardar(ReporteRequest request) {
+        System.out.println("VERSION NUEVA DEL SERVICIO");
         if (request == null || request.getMascotaId() == null) {
             return null;
         }
@@ -52,20 +52,39 @@ public class ReporteService {
         reporte.setFechaHora(fechaHora);
         reporte.setMascotaId(mascota.getId());
         reporte.setMascotaNombre(mascota.getNombre());
-        reporte.setUbicacion(ubicacionService.encontrarPorId(request.getUbicacionId()).orElse(null));
+        reporte.setLongitud(request.getLongitud());
+        reporte.setLatitud(request.getLatitud());
+
+        if (request.getUsuarioId() != null) {
+            var usuario = usuarioService.obtenerUsuarioPorId(request.getUsuarioId());
+            if (usuario != null) {
+                reporte.setUsuarioId(usuario.getId());
+                reporte.setUsuarioNombre(usuario.getNombres());
+            }
+        }
         return repository.save(reporte);
     }
 
-    public Optional<ReporteModel> asignarUbicacion(Long reporteId, UbicacionModel ubicacion) {
-        Optional<ReporteModel> existente = repository.findById(reporteId);
-        if (existente.isEmpty()) {
-            return Optional.empty();
-        }
+    public Optional<ReporteModel> editar(Long id, ReporteRequest request) {
+        return repository.findById(id).map(reporte -> {
+            reporte.setDescripcion(request.getDescripcion());
+            reporte.setLongitud(request.getLongitud());
+            reporte.setLatitud(request.getLatitud());
 
-        UbicacionModel ubicacionGuardada = ubicacionService.guardar(ubicacion);
-        ReporteModel reporte = existente.get();
-        reporte.setUbicacion(ubicacionGuardada);
-        repository.save(reporte);
-        return Optional.of(reporte);
+            if (request.getFechaHora() != null) {
+                reporte.setFechaHora(request.getFechaHora());
+            }
+
+            return repository.save(reporte);
+        });
     }
+
+    public boolean eliminar(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
 }

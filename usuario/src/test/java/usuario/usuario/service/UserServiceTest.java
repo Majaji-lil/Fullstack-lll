@@ -1,72 +1,118 @@
 package usuario.usuario.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import usuario.usuario.model.UserModel;
 import usuario.usuario.repository.UserRepository;
 
-import java.util.List;
+@ExtendWith(MockitoExtension.class)
+public class UserServiceTest {
 
-@SpringBootTest
-@ActiveProfiles("test")
-class UserServiceTest {
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
+    @Mock
     private UserRepository userRepository;
 
-    @BeforeEach
-    void setUp() {
+    @InjectMocks
+    private UserService service;
 
-        userRepository.deleteAll();
+    @Test
+    public void testGuardarUsuario() {
+        // Arrange
+        UserModel usuario = new UserModel();
+        usuario.setCorreo("test@correo.com");
+        usuario.setPassword("password123");
+        usuario.setNombres("Juan Perez");
+
+        UserModel usuarioGuardado = new UserModel();
+        usuarioGuardado.setId(1);
+        usuarioGuardado.setCorreo("test@correo.com");
+        usuarioGuardado.setPassword("password123");
+        usuarioGuardado.setNombres("Juan Perez");
+
+        when(userRepository.save(usuario)).thenReturn(usuarioGuardado);
+
+        // Act
+        UserModel resultado = service.guardar(usuario);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getId());
+        assertEquals("test@correo.com", resultado.getCorreo());
+        assertEquals("Juan Perez", resultado.getNombres());
     }
 
     @Test
-    void debeGuardarYBuscarUnUsuario() {
-        UserModel nuevoUsuario = new UserModel(null, "test@correo.com", "password123", "Juan Perez");
+    public void testListarUsuarios() {
+        // Arrange
+        UserModel u1 = new UserModel();
+        u1.setId(1);
+        u1.setNombres("User Uno");
 
-        UserModel usuarioGuardado = userService.guardar(nuevoUsuario);
+        UserModel u2 = new UserModel();
+        u2.setId(2);
+        u2.setNombres("User Dos");
 
-        assertNotNull(usuarioGuardado.getId(), "El ID no debería ser null tras guardar");
-        assertEquals("test@correo.com", usuarioGuardado.getCorreo());
+        when(userRepository.findAll()).thenReturn(Arrays.asList(u1, u2));
 
-        // Comprobamos que podemos recuperarlo por ID
-        UserModel usuarioEncontrado = userService.encontrarPorId(usuarioGuardado.getId());
-        assertNotNull(usuarioEncontrado);
-        assertEquals("Juan Perez", usuarioEncontrado.getNombres());
+        // Act
+        List<UserModel> resultado = service.listar();
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        assertEquals("User Uno", resultado.get(0).getNombres());
+        assertEquals("User Dos", resultado.get(1).getNombres());
     }
 
     @Test
-    void debeListarTodosLosUsuarios() {
-        userService.guardar(new UserModel(null, "user1@correo.com", "pass1", "User Uno"));
-        userService.guardar(new UserModel(null, "user2@correo.com", "pass2", "User Dos"));
+    public void testEncontrarPorIdExistente() {
+        // Arrange
+        UserModel usuario = new UserModel();
+        usuario.setId(1);
+        usuario.setNombres("Juan Perez");
 
-        List<UserModel> usuarios = userService.listar();
+        when(userRepository.findById(1)).thenReturn(Optional.of(usuario));
 
-        assertEquals(2, usuarios.size(), "Debería haber exactamente 2 usuarios en la lista");
+        // Act
+        UserModel resultado = service.encontrarPorId(1);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(1, resultado.getId());
+        assertEquals("Juan Perez", resultado.getNombres());
     }
 
     @Test
-    void debeRetornarNullSiElUsuarioNoExiste() {
-        UserModel usuarioInexistente = userService.encontrarPorId(999);
-        assertNull(usuarioInexistente, "Debería retornar null para un ID que no existe");
+    public void testEncontrarPorIdNoExistente() {
+        // Arrange
+        when(userRepository.findById(999)).thenReturn(Optional.empty());
+
+        // Act
+        UserModel resultado = service.encontrarPorId(999);
+
+        // Assert
+        assertNull(resultado);
     }
 
     @Test
-    void debeEliminarUnUsuario() {
-        UserModel usuario = userService.guardar(new UserModel(null, "delete@correo.com", "pass", "A Eliminar"));
-        Integer id = usuario.getId();
+    public void testEliminarUsuario() {
+        // Act
+        service.eliminar(1);
 
-        userService.eliminar(id);
-
-        UserModel usuarioEliminado = userService.encontrarPorId(id);
-        assertNull(usuarioEliminado, "El usuario debería haber sido eliminado con éxito");
+        // Assert
+        verify(userRepository, times(1)).deleteById(1);
     }
 }

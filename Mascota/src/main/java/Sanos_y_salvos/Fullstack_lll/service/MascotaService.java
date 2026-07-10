@@ -20,22 +20,23 @@ public class MascotaService {
         return repository.findAll();
     }
 
-    public MascotaModel guardar(MascotaModel mascota){
+    public MascotaModel guardar(MascotaModel mascota) {
         return repository.save(mascota);
     }
 
-    public MascotaModel encontrarporid(Long id){
+    public MascotaModel encontrarporid(Long id) {
         return repository.findById(id).orElse(null);
     }
 
-    public MascotaModel actualizar (Long id, MascotaModel mascota) {
+    public MascotaModel actualizar(Long id, MascotaModel mascota) {
         MascotaModel mascotaExistente = repository.findById(id).orElse(null);
-        if (mascotaExistente == null) return null;
+        if (mascotaExistente == null)
+            return null;
 
         mascotaExistente.setNombre(mascota.getNombre());
         mascotaExistente.setEspecie(mascota.getEspecie());
         mascotaExistente.setRaza(mascota.getRaza());
-        mascotaExistente.setColor_caracteristica(mascota.getColor_caracteristica());
+        mascotaExistente.setColorCaracteristica(mascota.getColorCaracteristica());
         mascotaExistente.setTamano(mascota.getTamano());
 
         return repository.save(mascotaExistente);

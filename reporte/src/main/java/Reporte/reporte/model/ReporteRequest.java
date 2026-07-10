@@ -1,15 +1,32 @@
 package Reporte.reporte.model;
 
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class ReporteRequest {
 
+    // CORREGIDO: Cambiado de long a Long para estandarizar con IDs de base de datos
+    private Long usuarioId;
     private String descripcion;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaHora;
+
     private Long mascotaId;
-    private Long ubicacionId;
+    private Double longitud;
+    private Double latitud;
 
     public ReporteRequest() {
+    }
+
+    // CORREGIDO: Cambiado el retorno de Integer a Long
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    // CORREGIDO: Cambiado el parámetro de long a Long
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 
     public String getDescripcion() {
@@ -36,11 +53,19 @@ public class ReporteRequest {
         this.mascotaId = mascotaId;
     }
 
-    public Long getUbicacionId() {
-        return ubicacionId;
+    public Double getLongitud() {
+        return longitud;
     }
 
-    public void setUbicacionId(Long ubicacionId) {
-        this.ubicacionId = ubicacionId;
+    public void setLongitud(Double longitud) {
+        this.longitud = longitud;
+    }
+
+    public Double getLatitud() {
+        return latitud;
+    }
+
+    public void setLatitud(Double latitud) {
+        this.latitud = latitud;
     }
 }
