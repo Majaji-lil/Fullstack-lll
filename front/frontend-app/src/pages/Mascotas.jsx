@@ -341,4 +341,4 @@ export default function Mascotas() {
             )}
         </div>
     )
-}
+}   
