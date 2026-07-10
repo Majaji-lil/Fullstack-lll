@@ -57,52 +57,12 @@ const EMPTY_FORM = {
 
 const fotoUrl = (id) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8090'}/api/mascotas/${id}/foto`
 
-function FotoPreview({ file }) {
-    const [preview, setPreview] = useState(null)
-    useEffect(() => {
-        if (!file) { setPreview(null); return }
-        const url = URL.createObjectURL(file)
-        setPreview(url)
-        return () => URL.revokeObjectURL(url)
-    }, [file])
-
-    if (!preview) return null
-    return <img src={preview} alt="Preview" className="foto-preview-img" />
-}
-
-function ReporteCard({ reporte, onEdit, onDelete }) {
-    const [fotoOk, setFotoOk] = useState(true)
-    return (
-        <div className="reporte-card">
-            {reporte.mascotaId && fotoOk ? (
-                <img
-                    src={fotoUrl(reporte.mascotaId)}
-                    alt="Mascota"
-                    onError={() => setFotoOk(false)}
-                    className="reporte-card__img"
-                />
-            ) : (
-                <div className="reporte-card__placeholder">📋</div>
-            )}
-            <div className="reporte-card__content">
-                <InfoCard
-                    title={reporte.descripcion ? reporte.descripcion.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') : ''}
-                    badge={obtenerTextoBadge(reporte.descripcion, reporte.mascotaNombre)}
-                    badgeColor={obtenerColorBadge(reporte.descripcion)}
-                    meta={buildMeta(reporte)}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                />
-            </div>
-        </div>
-    )
-}
-
 const formatFecha = (f) => {
     if (!f) return null
     try {
         return new Date(f).toLocaleString('es-CL', {
-            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
         })
     } catch { return f }
 }
@@ -149,9 +109,58 @@ const buscarComunaPorCoords = (lat, lng) => {
     return masCercana
 }
 
-function Reportes() {
+function FotoPreview({ file }) {
+    const [preview, setPreview] = useState(null)
+    useEffect(() => {
+        if (!file) { setPreview(null); return }
+        const url = URL.createObjectURL(file)
+        setPreview(url)
+        return () => URL.revokeObjectURL(url)
+    }, [file])
+
+    if (!preview) return null
+    return <img src={preview} alt="Preview" className="mascota-foto-preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px', marginTop: '10px' }} />
+}
+
+// Subcomponente independiente para evitar error de hooks #310
+function ReporteCard({ r, cacheBuster, puedeEditar, openEdit, eliminar }) {
+    const [fotoOk, setFotoOk] = useState(true)
+
+    useEffect(() => {
+        setFotoOk(true)
+    }, [cacheBuster, r.mascotaId])
+
+    return (
+        <div className="reporte-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '8px', border: '1px solid #eee' }}>
+            {r.mascotaId && fotoOk ? (
+                <img
+                    src={`${fotoUrl(r.mascotaId)}?t=${cacheBuster}`}
+                    alt="Mascota"
+                    className="reporte-card__img"
+                    style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    onError={() => setFotoOk(false)}
+                />
+            ) : (
+                <div className="reporte-card__placeholder" style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', fontSize: '2rem' }}>📋</div>
+            )}
+            <div className="reporte-card__content" style={{ padding: '1rem', flexGrow: 1 }}>
+                <InfoCard
+                    title={r.descripcion ? r.descripcion.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') : ''}
+                    badge={obtenerTextoBadge(r.descripcion, r.mascotaNombre)}
+                    badgeColor={obtenerColorBadge(r.descripcion)}
+                    meta={buildMeta(r)}
+                    onEdit={puedeEditar(r) ? () => openEdit(r) : undefined}
+                    onDelete={puedeEditar(r) ? () => eliminar(r.id) : undefined}
+                />
+            </div>
+        </div>
+    )
+}
+
+export default function Reportes() {
     const [reportes, setReportes] = useState([])
     const [mascotas, setMascotas] = useState([])
+    const [cacheBuster, setCacheBuster] = useState(Date.now())
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [modal, setModal] = useState(false)
@@ -169,9 +178,10 @@ function Reportes() {
             .then(([rR, rM]) => {
                 setReportes(rR.data)
                 setMascotas(rM.data)
+                setCacheBuster(Date.now())
                 setError(null)
             })
-            .catch(() => setError('No se pudo conectar con el servidor'))
+            .catch(() => setError('No se pudo conectar al servicio de reportes o mascotas'))
             .finally(() => setLoading(false))
     }
 
@@ -191,16 +201,20 @@ function Reportes() {
         setFotoFile(null)
 
         const rawDesc = reporte.descripcion || ''
+        const esEncontrada = rawDesc.startsWith('[Encontrada]')
+        const esAvistada = rawDesc.startsWith('[Avistada]')
+        const esPerdida = rawDesc.startsWith('[Perdida]')
+
         let tipoDetectado = 'Perdida'
         let descLimpia = rawDesc
 
-        if (rawDesc.startsWith('[Encontrada]')) {
+        if (esEncontrada) {
             tipoDetectado = 'Encontrada'
             descLimpia = rawDesc.replace(/^\[Encontrada\]\s*/, '')
-        } else if (rawDesc.startsWith('[Avistada]')) {
+        } else if (esAvistada) {
             tipoDetectado = 'Avistada'
             descLimpia = rawDesc.replace(/^\[Avistada\]\s*/, '')
-        } else if (rawDesc.startsWith('[Perdida]')) {
+        } else if (esPerdida) {
             tipoDetectado = 'Perdida'
             descLimpia = rawDesc.replace(/^\[Perdida\]\s*/, '')
         }
@@ -229,8 +243,9 @@ function Reportes() {
     const handleMascotaNuevaChange = (campo, valor) =>
         setForm(prev => ({ ...prev, nuevaMascota: { ...prev.nuevaMascota, [campo]: valor } }))
 
+    // SEGURIDAD DE HIERRO: Si no hay usuario, nadie edita nada.
     const puedeEditar = (reporte) => {
-        if (!usuario) return true // En desarrollo permitimos editar siempre
+        if (!usuario) return false
         if (isAdmin) return true
         return reporte.usuarioId === usuario.id
     }
@@ -239,12 +254,22 @@ function Reportes() {
         setFormError('')
         const f = form
 
+        // Bloqueo de seguridad definitivo en submit
+        if (!usuario) {
+            setFormError('Debes iniciar sesión para realizar esta acción.')
+            return
+        }
+
         if (!f.descripcion.trim()) { setFormError('La descripción es obligatoria'); return }
         if (!f.comuna) { setFormError('Debes seleccionar una comuna'); return }
-        if (!f.fechaHora) { setFormError('La fecha y hora son obligatorias'); return }
+        if (!f.fechaHora) { setFormError('La fecha y hora del suceso son obligatorias'); return }
 
         if (!editando && !f.crearNuevaMascota && !f.mascotaId) {
-            setFormError('Selecciona una mascota o registra una nueva')
+            setFormError('Selecciona una mascota o marca la opción de registrar una nueva')
+            return
+        }
+        if (!editando && f.crearNuevaMascota && (!f.nuevaMascota.nombre.trim() || !f.nuevaMascota.especie.trim())) {
+            setFormError('Nombre y especie de la mascota son obligatorios')
             return
         }
 
@@ -259,33 +284,35 @@ function Reportes() {
                     nombre: f.nuevaMascota.nombre.trim(),
                     especie: f.nuevaMascota.especie.trim(),
                     raza: f.nuevaMascota.raza.trim() || null,
-                    colorCaracteristica: `[${f.tipo}] ${f.nuevaMascota.colorCaracteristica.trim()}`.trim(),
+                    colorCaracteristica: f.nuevaMascota.colorCaracteristica.trim() || null,
                     tamano: f.nuevaMascota.tamano.trim() || null,
-                    usuarioId: usuario?.id || null,
-                    usuarioNombre: usuario?.nombres || null,
+                    usuarioId: usuario.id, // Vinculada al creador
+                    usuarioNombre: usuario.nombres || null
                 }
 
                 const { data: mascotaGuardada } = await axios.post(API_MASCOTAS, payloadMascotaNueva)
                 mascotaIdFinal = mascotaGuardada.id
                 mascotaCreadaId = mascotaGuardada.id
 
+                // Subir la foto si se seleccionó una
                 if (fotoFile && mascotaIdFinal) {
                     const formData = new FormData()
                     formData.append('archivo', fotoFile)
                     await axios.post(`${API_MASCOTAS}/${mascotaIdFinal}/foto`, formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' },
+                        headers: { 'Content-Type': 'multipart/form-data' }
                     })
                 }
             }
 
             const comunaData = COMUNAS.find(c => c.nombre === f.comuna)
+
             const payloadReporte = {
                 descripcion: '[' + f.tipo + '] ' + f.descripcion.trim(),
                 fechaHora: formatearFechaParaJava(f.fechaHora),
                 mascotaId: mascotaIdFinal,
                 longitud: comunaData ? comunaData.longitud : null,
                 latitud: comunaData ? comunaData.latitud : null,
-                usuarioId: usuario?.id || null,
+                usuarioId: editando ? editando.usuarioId : usuario.id, // Mantiene dueño original o asigna el actual logueado
             }
 
             if (editando) {
@@ -296,55 +323,76 @@ function Reportes() {
 
             closeModal()
             cargar()
+
         } catch (err) {
             if (mascotaCreadaId) {
-                try { await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`) } catch { }
+                try {
+                    await axios.delete(`${API_MASCOTAS}/${mascotaCreadaId}`)
+                } catch (delErr) {
+                    console.error('Falló la limpieza de la mascota huérfana:', delErr.message)
+                }
             }
-            setFormError('Error crítico al guardar el reporte.')
+
+            const msgError = (err.response && err.response.data && err.response.data.message)
+                ? err.response.data.message
+                : 'Error crítico al procesar el flujo del reporte.'
+            setFormError(msgError)
         } finally {
             setGuardando(false)
         }
     }
 
     const eliminar = (id) => {
-        if (!confirm('¿Eliminar este reporte?')) return
-        axios.delete(`${API_REPORTES}/${id}`).then(() => cargar())
+        if (!confirm('¿Estás seguro de que deseas eliminar este reporte? Esta acción no se puede deshacer.')) return
+        axios.delete(`${API_REPORTES}/${id}`)
+            .then(() => cargar())
+            .catch(() => alert('No se pudo eliminar el reporte seleccionado.'))
     }
 
     const reportesFiltrados = reportes.filter(r => {
         if (filtroActual === 'Todas') return true
-        return r.descripcion && r.descripcion.startsWith(`[${filtroActual.slice(0, -1)}]`)
+        if (filtroActual === 'Perdidas') return r.descripcion && r.descripcion.startsWith('[Perdida]')
+        if (filtroActual === 'Avistadas') return r.descripcion && r.descripcion.startsWith('[Avistada]')
+        if (filtroActual === 'Encontradas') return r.descripcion && r.descripcion.startsWith('[Encontrada]')
+        return true
     })
 
     return (
         <div className="reportes-page">
             <div className="page-header">
-                <div>
+                <div className="page-header__text">
                     <h1>Reportes</h1>
-                    <p>{reportesFiltrados.length} activos</p>
+                    <p>{reportesFiltrados.length} reporte{reportesFiltrados.length !== 1 ? 's' : ''} en pantalla</p>
                 </div>
                 <Button variant="primary" onClick={openCreate}>+ Nuevo reporte</Button>
             </div>
 
             <div className="reportes-filtros-bar">
-                {['Todas', 'Perdidas', 'Avistadas', 'Encontradas'].map(t => (
-                    <button
-                        key={t}
-                        className={`filtro-btn ${filtroActual === t ? 'activo-' + t.toLowerCase() : ''}`}
-                        onClick={() => setFiltroActual(t)}
-                    >
-                        {t}
-                    </button>
-                ))}
+                <button className={`filtro-btn ${filtroActual === 'Todas' ? 'activo-todas' : ''}`} onClick={() => setFiltroActual('Todas')}>Todas</button>
+                <button className={`filtro-btn ${filtroActual === 'Perdidas' ? 'activo-perdidas' : ''}`} onClick={() => setFiltroActual('Perdidas')}>Perdidas</button>
+                <button className={`filtro-btn ${filtroActual === 'Avistadas' ? 'activo-avistadas' : ''}`} onClick={() => setFiltroActual('Avistadas')}>Avistadas</button>
+                <button className={`filtro-btn ${filtroActual === 'Encontradas' ? 'activo-encontradas' : ''}`} onClick={() => setFiltroActual('Encontradas')}>Encontradas</button>
             </div>
+
+            {loading && <p className="reportes-loading">Cargando...</p>}
+            {error && <div className="alert-error">⚠️ {error}</div>}
+
+            {!loading && !error && reportesFiltrados.length === 0 && (
+                <div className="empty-state">
+                    <div className="empty-state__icon">📋</div>
+                    <p>No hay reportes para este filtro.</p>
+                </div>
+            )}
 
             <div className="card-grid">
                 {reportesFiltrados.map(r => (
                     <ReporteCard
                         key={r.id}
-                        reporte={r}
-                        onEdit={puedeEditar(r) ? () => openEdit(r) : undefined}
-                        onDelete={puedeEditar(r) ? () => eliminar(r.id) : undefined}
+                        r={r}
+                        cacheBuster={cacheBuster}
+                        puedeEditar={puedeEditar}
+                        openEdit={openEdit}
+                        eliminar={eliminar}
                     />
                 ))}
             </div>
@@ -354,58 +402,84 @@ function Reportes() {
                     title={editando ? 'Editar reporte' : 'Nuevo reporte'}
                     onClose={closeModal}
                     onSave={guardar}
-                    saveLabel={guardando ? 'Guardando...' : 'Publicar'}
+                    saveLabel={guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Publicar reporte')}
                 >
                     <div className="reportes-form-group">
                         <label className="reportes-select-label">Estado del Reporte *</label>
-                        <select className="reportes-select" value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })}>
+                        <select
+                            className="reportes-select"
+                            value={form.tipo}
+                            onChange={e => setForm({ ...form, tipo: e.target.value })}
+                        >
                             <option value="Perdida">Mascota Perdida</option>
                             <option value="Avistada">Mascota Avistada</option>
                             <option value="Encontrada">Mascota Encontrada</option>
                         </select>
                     </div>
 
-                    <Input label="Descripción *" textarea value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} />
-                    <Input label="Fecha y hora *" type="datetime-local" value={form.fechaHora} onChange={e => setForm({ ...form, fechaHora: e.target.value })} />
+                    <Input
+                        label="Descripción *"
+                        placeholder="¿Qué pasó? Describe la situación..."
+                        textarea
+                        value={form.descripcion}
+                        onChange={e => setForm({ ...form, descripcion: e.target.value })}
+                    />
+
+                    <Input
+                        label="Fecha y hora *"
+                        type="datetime-local"
+                        value={form.fechaHora}
+                        onChange={e => setForm({ ...form, fechaHora: e.target.value })}
+                    />
 
                     {!editando && (
                         <>
                             <hr className="reportes-form-divider" />
                             <div className="reportes-mascota-section">
                                 <label className="checkbox-nueva-mascota-label">
-                                    <input type="checkbox" checked={form.crearNuevaMascota} onChange={e => setForm(prev => ({ ...prev, crearNuevaMascota: e.target.checked, mascotaId: '' }))} />
+                                    <input
+                                        type="checkbox"
+                                        checked={form.crearNuevaMascota}
+                                        onChange={e => setForm(prev => ({
+                                            ...prev,
+                                            crearNuevaMascota: e.target.checked,
+                                            mascotaId: ''
+                                        }))}
+                                    />
                                     <span>La mascota no está en la lista (registrar ahora)</span>
                                 </label>
 
                                 {!form.crearNuevaMascota ? (
                                     <div className="reportes-select-wrapper">
                                         <label className="reportes-select-label">Mascota *</label>
-                                        <select className="reportes-select" value={form.mascotaId} onChange={e => setForm({ ...form, mascotaId: e.target.value })}>
+                                        <select
+                                            className="reportes-select"
+                                            value={form.mascotaId}
+                                            onChange={e => setForm({ ...form, mascotaId: e.target.value })}
+                                        >
                                             <option value="">Selecciona una mascota...</option>
-                                            {mascotas.map(m => <option key={m.id} value={m.id}>{m.nombre} ({m.especie})</option>)}
+                                            {mascotas.map(m => (
+                                                <option key={m.id} value={m.id}>
+                                                    {m.nombre} {m.especie ? '(' + m.especie + ')' : ''}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 ) : (
                                     <div className="nueva-mascota-subform">
                                         <p className="subform-title">Datos de la nueva mascota</p>
                                         <div className="subform-grid">
-                                            <Input label="Nombre *" value={form.nuevaMascota.nombre} onChange={e => handleMascotaNuevaChange('nombre', e.target.value)} />
-                                            <Input label="Especie *" value={form.nuevaMascota.especie} onChange={e => handleMascotaNuevaChange('especie', e.target.value)} />
-                                            <Input label="Raza" value={form.nuevaMascota.raza} onChange={e => handleMascotaNuevaChange('raza', e.target.value)} />
-                                            <Input label="Características" value={form.nuevaMascota.colorCaracteristica} onChange={e => handleMascotaNuevaChange('colorCaracteristica', e.target.value)} />
-                                            <Input label="Tamaño" value={form.nuevaMascota.tamano} onChange={e => handleMascotaNuevaChange('tamano', e.target.value)} />
+                                            <Input label="Nombre *" placeholder="Ej: Firulais" value={form.nuevaMascota.nombre} onChange={e => handleMascotaNuevaChange('nombre', e.target.value)} />
+                                            <Input label="Especie *" placeholder="Ej: Perro" value={form.nuevaMascota.especie} onChange={e => handleMascotaNuevaChange('especie', e.target.value)} />
+                                            <Input label="Raza" placeholder="Ej: Labrador" value={form.nuevaMascota.raza} onChange={e => handleMascotaNuevaChange('raza', e.target.value)} />
+                                            <Input label="Color y características" placeholder="Ej: Café con blanco" value={form.nuevaMascota.colorCaracteristica} onChange={e => handleMascotaNuevaChange('colorCaracteristica', e.target.value)} />
+                                            <Input label="Tamaño" placeholder="Ej: Mediano" value={form.nuevaMascota.tamano} onChange={e => handleMascotaNuevaChange('tamano', e.target.value)} />
                                         </div>
 
-                                        {/* SECCIÓN DE LA FOTO VINCULADA NATIVAMENTE AL CSS */}
-                                        <div className="form-foto-section">
-                                            <label className="form-foto-label">Foto de la mascota (opcional)</label>
+                                        <div className="mascota-upload-section" style={{ marginTop: '1rem' }}>
+                                            <label className="mascota-upload-label" style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>Foto de la mascota (Opcional)</label>
                                             <FotoPreview file={fotoFile} />
-                                            <label className="form-foto-picker">
-                                                <span>📷</span>
-                                                <span>{fotoFile ? fotoFile.name : 'Elegir foto...'}</span>
-                                                <input type="file" accept="image/*" className="form-foto-input-hidden" onChange={e => setFotoFile(e.target.files[0] || null)} />
-                                            </label>
-                                            {fotoFile && <button type="button" onClick={() => setFotoFile(null)} className="form-foto-remove">× Quitar</button>}
+                                            <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0] || null)} style={{ marginTop: '5px' }} />
                                         </div>
                                     </div>
                                 )}
@@ -414,13 +488,22 @@ function Reportes() {
                     )}
 
                     <hr className="reportes-form-divider" />
+
                     <div className="reportes-ubicacion-section">
-                        <label className="reportes-select-label">Comuna *</label>
-                        <select className="reportes-select" value={form.comuna} onChange={e => setForm({ ...form, comuna: e.target.value })}>
-                            <option value="">-- Selecciona --</option>
-                            {COMUNAS.map(c => <option key={c.nombre} value={c.nombre}>{c.nombre}</option>)}
+                        <p className="subform-title">Ubicación del suceso *</p>
+                        <label className="reportes-select-label">Comuna de Santiago *</label>
+                        <select
+                            className="reportes-select"
+                            value={form.comuna}
+                            onChange={e => setForm({ ...form, comuna: e.target.value })}
+                        >
+                            <option value="">-- Elige una comuna --</option>
+                            {COMUNAS.map(c => (
+                                <option key={c.nombre} value={c.nombre}>{c.nombre}</option>
+                            ))}
                         </select>
                     </div>
+
                     {formError && <div className="reportes-form-error">⚠️ {formError}</div>}
                 </Modal>
             )}
