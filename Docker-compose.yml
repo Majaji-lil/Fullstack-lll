@@ -112,9 +112,11 @@ services:
     restart: always
     ports:
       - "5173:80"
+    environment:
+      - API_GATEWAY_URL=http://api-gateway:8090
     volumes:
       - ./front/frontend-app:/app
-      - /app/node_modules  # <-- FIX: Prevents host machine from wiping out Vite
+      - /app/node_modules
     depends_on:
       - api-gateway
     networks:
