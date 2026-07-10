@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_MASCOTAS } from '../api/urls'
-import { useAuth } from '../context/AuthContext' // Añadido para protección
+import { useAuth } from '../context/AuthContext'
 import InfoCard from '../components/molecules/InfoCard'
 import Modal from '../organisms/Modal'
 import Input from '../components/atoms/Input'
@@ -27,9 +27,10 @@ function FotoPreview({ file }) {
     return <img src={preview} alt="Preview" className="mascota-foto-preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px', marginTop: '10px' }} />
 }
 
-// Subcomponente independiente para evitar error de hooks #310
+// Subcomponente independiente con Zoom incorporado
 function MascotaCard({ m, cacheBuster, puedeEditarMascota, openEdit, eliminar }) {
     const [fotoOk, setFotoOk] = useState(true)
+    const [zoomActivo, setZoomActivo] = useState(false) // Estado para el zoom
 
     useEffect(() => {
         setFotoOk(true)
@@ -49,16 +50,18 @@ function MascotaCard({ m, cacheBuster, puedeEditarMascota, openEdit, eliminar })
     }
 
     const colorMostrar = rawColor.replace(/^\[(Perdida|Avistada|Encontrada)\]\s*/, '') || 'Sin especificar'
+    const urlImagenCompleta = `${fotoUrl(m.id)}?t=${cacheBuster}`
 
     return (
         <div className="mascota-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '8px', border: '1px solid #eee' }}>
             {fotoOk ? (
                 <img
-                    src={`${fotoUrl(m.id)}?t=${cacheBuster}`}
+                    src={urlImagenCompleta}
                     alt={m.nombre}
                     className="mascota-card__img"
-                    style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', cursor: 'pointer' }}
                     onError={() => setFotoOk(false)}
+                    onClick={() => setZoomActivo(true)} // Activa zoom al hacer click
                 />
             ) : (
                 <div className="mascota-card__placeholder" style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', fontSize: '2rem' }}>🐾</div>
@@ -77,6 +80,26 @@ function MascotaCard({ m, cacheBuster, puedeEditarMascota, openEdit, eliminar })
                     onDelete={puedeEditarMascota(m) ? () => eliminar(m.id) : undefined}
                 />
             </div>
+
+            {/* Modal de Zoom */}
+            {zoomActivo && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0, left: 0, width: '100vw', height: '100vh',
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 10000, cursor: 'zoom-out'
+                    }}
+                    onClick={() => setZoomActivo(false)} // Cierra zoom al hacer click
+                >
+                    <img
+                        src={urlImagenCompleta}
+                        alt="Zoom de Mascota"
+                        style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '12px', objectFit: 'contain', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                    />
+                </div>
+            )}
         </div>
     )
 }
@@ -91,7 +114,7 @@ export default function Mascotas() {
     const [form, setForm] = useState(EMPTY)
     const [fotoFile, setFotoFile] = useState(null)
     const [filtroActual, setFiltroActual] = useState('Todas')
-    const { usuario, isAdmin } = useAuth() // Desestructuración del auth
+    const { usuario, isAdmin } = useAuth()
 
     const cargar = () => {
         setLoading(true)
@@ -158,7 +181,6 @@ export default function Mascotas() {
         setFotoFile(null)
     }
 
-    // SEGURIDAD DE HIERRO: Bloqueo estricto por sesión
     const puedeEditarMascota = (mascota) => {
         if (!usuario) return false
         if (isAdmin) return true
@@ -177,7 +199,7 @@ export default function Mascotas() {
             raza: form.raza.trim() || null,
             colorCaracteristica: `[${form.estado}] ${form.colorCaracteristica.trim()}`.trim(),
             tamano: form.tamano.trim() || null,
-            usuarioId: editando ? editando.usuarioId : usuario.id, // Preserva creador original o asigna el logueado
+            usuarioId: editando ? editando.usuarioId : usuario.id,
             usuarioNombre: editando ? editando.usuarioNombre : (usuario.nombres || null)
         }
 
@@ -188,7 +210,6 @@ export default function Mascotas() {
         req.then(async (res) => {
             const mascotaId = editando ? editando.id : res.data.id
 
-            // Si hay un archivo seleccionado, enviarlo al endpoint de fotos
             if (fotoFile && mascotaId) {
                 const formData = new FormData()
                 formData.append('archivo', fotoFile)
