@@ -26,7 +26,6 @@ import Sanos_y_salvos.Fullstack_lll.service.MascotaService;
 
 @RestController
 @RequestMapping("api/mascotas")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class MascotaController {
 
     private final MascotaService service;

@@ -20,7 +20,6 @@ import Reporte.reporte.service.ReporteService;
 
 @RestController
 @RequestMapping("api/reportes")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ReporteController {
 
     private final ReporteService service;
